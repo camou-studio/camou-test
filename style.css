@@ -387,11 +387,15 @@ a {
   }
 }
 
-/* Temporärer Tastatureditor; die sichtbaren Felder bleiben auf der Kugel. */
-.contact-editor[hidden]{display:none!important}
-.contact-editor{position:absolute;z-index:30;left:50%;top:50%;transform:translate(-50%,-50%);width:min(420px,90vw);padding:20px;background:#18221b;border:1px solid #b6c5aa;box-shadow:0 15px 50px #000b;color:#edf1e9;cursor:auto;touch-action:auto}
-.contact-editor label{display:block;font:12px var(--mono);margin-bottom:10px;text-transform:uppercase}
-.contact-editor input,.contact-editor textarea{width:100%;padding:12px;background:#101411;border:1px solid #b6c5aa;color:white;font:15px var(--sans);resize:vertical}
-.contact-editor-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:12px}
-.contact-editor button{background:transparent;color:white;border:1px solid #b6c5aa;padding:9px 12px;cursor:pointer}
-.contact-editor button:last-child{background:#b6c5aa;color:#101411}
+/* CAMOU: Tastatureingabe für die gekrümmten Felder. Nur bei Bearbeitung sichtbar. */
+.contact-editor[hidden] { display: none !important; }
+.contact-editor { position:absolute; inset:0; z-index:30; display:grid; place-items:center;
+  background:rgba(5,9,6,.70); padding:18px; cursor:default; touch-action:auto; }
+.contact-editor-box { width:min(440px,92vw); max-height:85%; overflow:auto;
+  background:#19231c; color:#edf1e9; border:1px solid #81927c; padding:24px;
+  box-shadow:0 20px 70px #0009; display:grid; gap:14px; }
+.contact-editor-box label { font:12px 'DM Mono',monospace; text-transform:uppercase; letter-spacing:1px; }
+.contact-editor-box input,.contact-editor-box textarea { width:100%; border:1px solid #81927c;
+  border-radius:0; background:#101411; color:white; padding:12px; font:16px Manrope,Arial,sans-serif; }
+.contact-editor-actions { display:flex; justify-content:flex-end; gap:12px; }
+.contact-editor-actions button { border:1px solid #81927c; background:#243128; color:white; padding:10px 14px; cursor:pointer; }
