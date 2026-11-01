@@ -1,294 +1,101 @@
-
-<!DOCTYPE html>
+<!doctype html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#10110f">
-  <meta name="description" content="camou — Independent artist from Switzerland. Gleiche Fragen. Neue Perspektiven.">
-  <title>camou — Independent Artist</title>
+  <meta name="theme-color" content="#101411">
+  <meta name="description" content="camou — Gleiche Fragen. Neue Perspektiven.">
+  <title>camou — independent artist</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
   <link rel="stylesheet" href="style.css">
-  <script src="script.js" defer></script>
+
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"
+      }
+    }
+  </script>
+
+  <script type="module" src="script.js"></script>
 </head>
+
 <body>
+  <main class="experience">
 
-  <header class="topbar">
-    <a class="wordmark" href="#home" aria-label="camou Startseite">camou</a>
+    <header class="topbar">
+      <a class="logo" href="#" id="logo">camou<span>.</span></a>
 
-    <span class="topbar-note">Independent artist / Switzerland</span>
+      <nav class="navigation" aria-label="Hauptnavigation">
+        <button class="nav-link active" data-section="0">Home</button>
+        <button class="nav-link" data-section="1">Music</button>
+        <button class="nav-link" data-section="2">Visuals</button>
+        <button class="nav-link" data-section="3">Archive</button>
+        <button class="nav-link" data-section="4">Contact</button>
+      </nav>
 
-    <button class="menu-toggle" id="menuToggle"
-      aria-label="Menü öffnen" aria-expanded="false"
-      aria-controls="navigation">
-      <span></span>
-      <span></span>
-    </button>
-  </header>
+      <div class="top-note">
+        INDEPENDENT ARTIST / SWITZERLAND
+      </div>
+    </header>
 
-  <nav class="navigation" id="navigation" aria-hidden="true">
-    <div class="nav-inner">
-      <span class="nav-caption">Navigation / 01—04</span>
-      <a href="#music" class="nav-link"><span>01</span> Music</a>
-      <a href="#visuals" class="nav-link"><span>02</span> Visuals</a>
-      <a href="#archive" class="nav-link"><span>03</span> Archive</a>
-      <a href="#contact" class="nav-link"><span>04</span> Contact</a>
-      <div class="nav-bottom">Gleiche Fragen. Neue Perspektiven.</div>
-    </div>
-  </nav>
+    <section class="globe-stage" aria-label="Drehbare Camou-Kugel">
 
-  <main>
-    <!-- HERO -->
-    <section class="hero section" id="home">
-      <div class="hero-meta">
-        <span>New project / 001</span>
-        <span>Switzerland</span>
+      <div id="globe"></div>
+      <!-- CONTACT: echtes Formular, nur ueber der Vorderseite der Kugel sichtbar -->
+      <div class="globe-contact" id="globe-contact" aria-hidden="true">
+        <form id="camou-contact-form" class="camou-contact-form" aria-label="Kontaktformular">
+          <div class="camou-contact-heading">NACHRICHT SCHREIBEN</div>
+          <label for="camou-name">name</label>
+          <input id="camou-name" name="name" autocomplete="name" placeholder="dein name" required>
+          <label for="camou-email">e-mail</label>
+          <input id="camou-email" name="email" type="email" autocomplete="email" placeholder="deine@mail.com" required>
+          <label for="camou-subject">betreff</label>
+          <input id="camou-subject" name="subject" placeholder="um was gehts?" required>
+          <label for="camou-message">nachricht</label>
+          <textarea id="camou-message" name="message" placeholder="hallo camou, ..." required></textarea>
+          <div class="camou-honeypot" aria-hidden="true"><label for="camou-website">website</label><input id="camou-website" name="website" tabindex="-1" autocomplete="off"></div>
+          <label class="camou-consent"><input type="checkbox" name="privacy" value="zugestimmt" required><span>meine angaben dürfen zur beantwortung/verarbeitung gespeichert werden</span></label>
+          <a class="camou-privacy-link" href="impressum.html">impressum / datenschutz</a>
+          <button type="submit" id="camou-send">nachricht senden →</button>
+          <p id="camou-form-status" role="status" aria-live="polite"></p>
+        </form>
       </div>
 
-      <div class="hero-art" aria-hidden="true">
-        <div class="art-orbit orbit-one"></div>
-        <div class="art-orbit orbit-two"></div>
-        <div class="art-core"></div>
-        <div class="art-grain"></div>
-        <span class="art-index">C—001</span>
+
+      <div class="zoom-controls" aria-label="Zoom">
+        <button id="zoom-in" aria-label="Vergrößern">+</button>
+        <button id="zoom-out" aria-label="Verkleinern">−</button>
+        <button id="zoom-reset" aria-label="Zoom zurücksetzen">↺</button>
       </div>
 
-      <div class="hero-content">
-        <p class="eyebrow reveal">Independent music & visual work</p>
-        <h1 class="hero-title reveal">c a m o u</h1>
-        <p class="hero-subtitle reveal">
-          Gleiche Fragen.<br>
-          Neue Perspektiven.
-        </p>
-        <a class="text-link hero-link reveal" href="#music">
-          <span class="play-symbol">▶</span> Zum Release
-          <span class="link-arrow">↘</span>
-        </a>
+      <div class="interaction-hint" id="hint">
+        <span class="hint-dot"></span>
+        DRAG TO EXPLORE
       </div>
 
-      <a href="#music" class="scroll-cue" aria-label="Nach unten scrollen">
-        <span>Scroll down</span>
-        <span class="scroll-line"></span>
-      </a>
+      <div class="section-indicator">
+        <span id="current-section">HOME</span>
+        <span class="indicator-line"></span>
+        <span id="section-number">01 / 05</span>
+      </div>
 
-      <div class="section-number">01 / 04</div>
     </section>
 
-    <!-- MUSIC -->
-    <section class="section music-section" id="music">
-      <div class="section-heading reveal">
-        <span class="eyebrow">01 — Music</span>
-        <span class="eyebrow">Latest release</span>
+    <footer class="footer">
+      <span>camou — independent artist / Switzerland</span>
+
+      <div class="footer-links">
+        <a href="#" id="instagram-link">Instagram</a>
+        <a href="#" id="spotify-link">Spotify</a>
+        <a href="mailto:camou.kontakt@gmail.com">Contact ↗</a>
       </div>
+    </footer>
 
-      <div class="music-layout">
-        <div class="release-art reveal" aria-label="Abstrakte Release-Grafik">
-          <div class="release-circle circle-a"></div>
-          <div class="release-circle circle-b"></div>
-          <div class="release-circle circle-c"></div>
-          <span class="release-art-caption">camou / 001</span>
-          <span class="release-art-index">001</span>
-        </div>
-
-        <div class="release-info reveal">
-          <p class="eyebrow">Latest release / 001</p>
-          <h2 class="release-title">f r a g m e n t e</h2>
-          <p class="release-description">
-            Ein Song zwischen Licht und Schatten.<br>
-            Zwischen dem, was man sieht – und dem,<br class="desktop-only">
-            was bleibt.
-          </p>
-
-          <!-- Hier später den echten Release-Link einsetzen -->
-          <a class="text-link" href="https://open.spotify.com/"
-             target="_blank" rel="noopener noreferrer">
-            Jetzt hören <span class="link-arrow">↗</span>
-          </a>
-
-          <div class="platform-links">
-            <a href="https://open.spotify.com/" target="_blank"
-               rel="noopener noreferrer">Spotify ↗</a>
-            <a href="https://music.apple.com/" target="_blank"
-               rel="noopener noreferrer">Apple Music ↗</a>
-            <a href="https://www.youtube.com/" target="_blank"
-               rel="noopener noreferrer">YouTube ↗</a>
-          </div>
-        </div>
-      </div>
-
-      <div class="release-footer">
-        <span>01 / 01</span>
-        <span>Sound in progress</span>
-      </div>
-    </section>
-
-    <!-- VISUALS -->
-    <section class="section work-section" id="visuals">
-      <div class="section-heading reveal">
-        <span class="eyebrow">02 — Visuals</span>
-        <span class="eyebrow">Selected impressions</span>
-      </div>
-
-      <div class="work-layout">
-        <div class="work-copy reveal">
-          <p class="eyebrow">Beyond the visible</p>
-          <h2>Bilder,<br>die bleiben.</h2>
-          <p class="body-copy">
-            Momente, die verschwinden.<br>
-            Spuren, die weiterleben.
-          </p>
-          <span class="scroll-hint">↓ Innerhalb des Rahmens scrollen</span>
-        </div>
-
-        <div class="scroll-frame reveal" tabindex="0"
-             aria-label="Visuals-Galerie. Zum Entdecken innerhalb des Rahmens scrollen.">
-          <article class="visual-card visual-one">
-            <div class="visual-image visual-image-one">
-              <span class="image-coordinate">47° / 08°</span>
-              <span class="image-shape"></span>
-            </div>
-            <div class="card-caption">
-              <span>V—001</span>
-              <span>Between states</span>
-            </div>
-          </article>
-
-          <article class="visual-card visual-two">
-            <div class="visual-image visual-image-two">
-              <span class="image-coordinate">STUDY / 002</span>
-              <span class="image-shape"></span>
-            </div>
-            <div class="card-caption">
-              <span>V—002</span>
-              <span>Soft distortion</span>
-            </div>
-          </article>
-
-          <article class="visual-card visual-three">
-            <div class="visual-image visual-image-three">
-              <span class="image-coordinate">LIGHT / FORM</span>
-              <span class="image-shape"></span>
-            </div>
-            <div class="card-caption">
-              <span>V—003</span>
-              <span>Almost still</span>
-            </div>
-          </article>
-        </div>
-      </div>
-      <div class="section-number">02 / 04</div>
-    </section>
-
-    <!-- ARCHIVE -->
-    <section class="section archive-section" id="archive">
-      <div class="section-heading reveal">
-        <span class="eyebrow">03 — Archive</span>
-        <span class="eyebrow">Ongoing collection</span>
-      </div>
-
-      <div class="archive-layout">
-        <div class="archive-intro reveal">
-          <p class="eyebrow">Collected over time</p>
-          <h2>Alles<br>hinterlässt<br>Spuren.</h2>
-          <p class="body-copy">
-            Ein wachsendes Archiv aus Musik
-            und visuellen Arbeiten.
-          </p>
-          <span class="scroll-hint">↓ Weiter entdecken</span>
-        </div>
-
-        <div class="scroll-frame archive-frame" tabindex="0"
-             aria-label="Archiv. Zum Entdecken innerhalb des Rahmens scrollen.">
-          <article class="archive-entry">
-            <div class="archive-thumb archive-thumb-one">
-              <span>001</span>
-            </div>
-            <div class="archive-entry-copy">
-              <span class="eyebrow">2026 / Music</span>
-              <h3>fragmente</h3>
-              <p>Zwischen Licht und Schatten.</p>
-            </div>
-            <span class="entry-arrow">↗</span>
-          </article>
-
-          <article class="archive-entry">
-            <div class="archive-thumb archive-thumb-two">
-              <span>002</span>
-            </div>
-            <div class="archive-entry-copy">
-              <span class="eyebrow">Study / Visuals</span>
-              <h3>Zwischenräume</h3>
-              <p>Eine visuelle Studie über das Dazwischen.</p>
-            </div>
-            <span class="entry-arrow">↗</span>
-          </article>
-
-          <article class="archive-entry">
-            <div class="archive-thumb archive-thumb-three">
-              <span>003</span>
-            </div>
-            <div class="archive-entry-copy">
-              <span class="eyebrow">Unreleased / Sound</span>
-              <h3>ohne titel</h3>
-              <p>Eine Idee in Bewegung.</p>
-            </div>
-            <span class="entry-arrow">↗</span>
-          </article>
-
-          <article class="archive-entry">
-            <div class="archive-thumb archive-thumb-four">
-              <span>004</span>
-            </div>
-            <div class="archive-entry-copy">
-              <span class="eyebrow">Fragments / 2026</span>
-              <h3>notizen</h3>
-              <p>Gedanken, Bilder und offene Fragen.</p>
-            </div>
-            <span class="entry-arrow">↗</span>
-          </article>
-        </div>
-      </div>
-      <div class="section-number">03 / 04</div>
-    </section>
-
-    <!-- CONTACT -->
-    <section class="section contact-section" id="contact">
-      <div class="section-heading reveal">
-        <span class="eyebrow">04 — Contact</span>
-        <span class="eyebrow">Open for collaboration</span>
-      </div>
-
-      <div class="contact-content reveal">
-        <p class="eyebrow">Have something in mind?</p>
-        <h2>Let's leave<br>a trace.</h2>
-        <p class="body-copy">
-          Für Anfragen und<br>
-          Zusammenarbeit.
-        </p>
-
-        <a class="contact-email"
-           href="mailto:camou.kontakt@gmail.com">
-          camou.kontakt@gmail.com <span>↗</span>
-        </a>
-      </div>
-
-      <div class="contact-orbit" aria-hidden="true"></div>
-      <div class="section-number">04 / 04</div>
-    </section>
   </main>
-
-  <footer class="footer">
-    <a href="#home" class="footer-logo">camou</a>
-    <span>Independent artist / Switzerland</span>
-    <div class="footer-links">
-      <a href="https://www.instagram.com/" target="_blank"
-         rel="noopener noreferrer">Instagram ↗</a>
-      <a href="https://open.spotify.com/" target="_blank"
-         rel="noopener noreferrer">Spotify ↗</a>
-      <a href="mailto:camou.kontakt@gmail.com">Contact ↗</a>
-    </div>
-    <span class="copyright">© <span id="year"></span> camou</span>
-  </footer>
-
 </body>
 </html>
-
