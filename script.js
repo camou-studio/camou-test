@@ -336,6 +336,10 @@ function drawPlayButton(ctx, centerX, centerY, size) {
 /* CONTACT ist eine echte CanvasTexture auf der Kugel. Die Eingabe selbst
    erfolgt kurzzeitig über ein natives Feld, damit Tastatur/IME funktionieren. */
 const contactValues = { name:"", email:"", subject:"", message:"", privacy:false };
+// Existing Google Apps Script endpoint from the supplied kontakt.html.
+const CONTACT_SCRIPT_URL = "https://script.google.com/macros/s/AKfycby3SfFxFDJQZNL0PxI75Z0O_HyDZl_MoC2b8jcW5PLy0kwPAuiOnK9macrxFTaUboXftg/exec";
+let contactSending = false;
+let contactStatus = "";
 const contactHitAreas = [
   { key:"name",    label:"NAME",     x1:-280,x2:280,y1:650,y2:725 },
   { key:"email",   label:"E-MAIL",   x1:-280,x2:280,y1:738,y2:813 },
@@ -375,11 +379,13 @@ function drawContactPanel(ctx, section, centerX, panelW, canvasH) {
   for(const a of contactHitAreas){
     const left=centerX+a.x1, width=a.x2-a.x1;
     const y=a.y1, h=a.y2-a.y1;
-    ctx.strokeStyle="rgba(226,235,220,.55)";ctx.lineWidth=2;
+    // Dark fields provide the boundaries; only the action gets a subtle outline.
+    ctx.strokeStyle="rgba(226,235,220,.17)";ctx.lineWidth=1;
     ctx.fillStyle="rgba(5,12,8,.5)";
-    ctx.fillRect(left,y,width,h);ctx.strokeRect(left,y,width,h);
+    ctx.fillRect(left,y,width,h);
+    if (a.key === 'send') ctx.strokeRect(left+.5,y+.5,width-1,h-1);
     if(a.key==='privacy'){
-      ctx.strokeRect(left+15,y+17,24,24);
+      ctx.strokeRect(left+15.5,y+17.5,23,23);
       if(contactValues.privacy){ctx.fillStyle="#c4d9b8";ctx.font="bold 21px Arial";ctx.fillText("✓",left+18,y+37);}
       ctx.fillStyle="#e2e9df";ctx.font="16px 'DM Mono',monospace";
       ctx.fillText("Angaben zur Bearbeitung speichern",left+49,y+38,width-70);
@@ -387,7 +393,7 @@ function drawContactPanel(ctx, section, centerX, panelW, canvasH) {
     }
     if(a.key==='send'){
       ctx.fillStyle="#e9f1e4";ctx.font="500 20px 'DM Mono',monospace";
-      ctx.textAlign="center";ctx.fillText("NACHRICHT SENDEN →",centerX,y+44,width-25);ctx.textAlign="left";
+      ctx.textAlign="center";ctx.fillText(contactSending ? "WIRD GESENDET …" : "NACHRICHT SENDEN →",centerX,y+44,width-25);ctx.textAlign="left";
       continue;
     }
     ctx.fillStyle="#b5c5b0";ctx.font="500 15px 'DM Mono',monospace";
@@ -397,7 +403,7 @@ function drawContactPanel(ctx, section, centerX, panelW, canvasH) {
     contactText(ctx,v,left+15,y+48,width-30,30,a.key==='message'?6:1);
   }
   ctx.fillStyle="#a9bda3";ctx.font="17px 'DM Mono',monospace";
-  ctx.textAlign="center";ctx.fillText("Datenschutz: siehe Impressum",centerX,1390,panelW*.75);
+  ctx.textAlign="center";ctx.fillText(contactStatus || "Datenschutz: siehe Impressum",centerX,1390,panelW*.75);
   ctx.strokeStyle="rgba(226,235,220,.35)";ctx.beginPath();
   ctx.moveTo(centerX-panelW*.38,1455);ctx.lineTo(centerX+panelW*.38,1455);ctx.stroke();
   ctx.fillStyle="#b5c5b0";ctx.font="19px 'DM Mono',monospace";
@@ -940,8 +946,30 @@ function handleContactClick(event){
     if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contactValues.email)){
       alert("Bitte eine gültige E-Mail-Adresse eingeben.");return;
     }
-    const body=`Name: ${contactValues.name}\nE-Mail: ${contactValues.email}\n\n${contactValues.message}`;
-    window.location.href=`mailto:camou.kontakt@gmail.com?subject=${encodeURIComponent(contactValues.subject)}&body=${encodeURIComponent(body)}`;
+    if (contactSending) return;
+    contactSending = true;
+    contactStatus = "Übertragung läuft …";
+    redrawContactTexture();
+    const formData = new FormData();
+    formData.append("name", contactValues.name);
+    formData.append("email", contactValues.email);
+    formData.append("subject", contactValues.subject);
+    formData.append("message", contactValues.message);
+    formData.append("privacy", "zugestimmt");
+    formData.append("website", ""); // Honeypot field used by the existing endpoint.
+    fetch(CONTACT_SCRIPT_URL, { method:"POST", body:formData, mode:"no-cors" })
+      .then(() => {
+        // no-cors returns an opaque response: server acceptance cannot be verified.
+        contactStatus = "Übermittelt – Empfang nicht bestätigt";
+        contactSending = false;
+        redrawContactTexture();
+      })
+      .catch(error => {
+        console.error("Kontaktformular: Übertragungsfehler", error);
+        contactStatus = "Übertragung fehlgeschlagen";
+        contactSending = false;
+        redrawContactTexture();
+      });
     return;
   }
   openContactEditor(target.key);
