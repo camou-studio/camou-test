@@ -77,22 +77,16 @@ const sections = [
     image: ASSETS.visuals
   },
   {
-    name: "ARCHIVE",
+    name: "ECHOES",
     poleLetter: "o",
     eyebrow: "03 — SELECTED WORKS",
-    title: ["Archive"],
+    title: ["Echoes"],
     body: [
-      "Alles hinterlässt Spuren.",
-      "Ein wachsendes Archiv aus Musik",
-      "und visuellen Arbeiten."
+      "Songs und Spuren, die an",
+      "verschiedenen Orten widerhallen."
     ],
     image: ASSETS.archive,
-    extra: [
-      "fragmente",
-      "Zwischenräume",
-      "ohne titel",
-      "notizen"
-    ]
+    extra: []
   },
   {
     name: "CONTACT",
@@ -410,9 +404,9 @@ function drawContactPanel(ctx, section, centerX, panelW, canvasH) {
   ctx.fillStyle="#a9bda3";ctx.font="17px 'DM Mono',monospace";
   ctx.textAlign="center";ctx.fillText(contactStatus || "Datenschutz: siehe Impressum",centerX,1390,panelW*.75);
   ctx.strokeStyle="rgba(226,235,220,.35)";ctx.beginPath();
-  ctx.moveTo(centerX-panelW*.38,1455);ctx.lineTo(centerX+panelW*.38,1455);ctx.stroke();
+  ctx.moveTo(centerX-panelW*.38,canvasH*.88);ctx.lineTo(centerX+panelW*.38,canvasH*.88);ctx.stroke();
   ctx.fillStyle="#b5c5b0";ctx.font="19px 'DM Mono',monospace";
-  ctx.fillText("05 / 05",centerX,1535);
+  ctx.fillText("05 / 05",centerX,canvasH*.92);
   ctx.restore();
 }
 function redrawContactTexture(){
@@ -423,6 +417,83 @@ function redrawContactTexture(){
   drawContactPanel(globeContext,sections[4],center-w,pw,h);
   globeTexture.needsUpdate=true;
 }
+/* ECHOES: Kompass in der bestehenden ARCHIVE-Bildfläche.
+   Vorläufige b3nn3t-Links, bis CAMOU-Profile vorhanden sind. */
+const ECHOES_LINKS = [
+  {label:"INSTAGRAM", angle:-Math.PI/2, url:"https://www.instagram.com/b3nn3t"},
+  {label:"SPOTIFY", angle:Math.PI, url:"https://open.spotify.com/intl-de/artist/7pajHvUWNCnOPhDPyH4M6x"},
+  {label:"APPLE", angle:0, url:"https://music.apple.com/ch/artist/b3nn3t/1786857463"},
+  {label:"YOUTUBE", angle:Math.PI/2, url:"https://www.youtube.com/@b333nn3t"}
+];
+let echoesAngle = 0;
+let echoesImage = null;
+let echoesLastDraw = 0;
+const echoesCompassRadius = 137;
+function drawEchoesCompass(ctx, cx, cy) {
+  ctx.save();
+  ctx.fillStyle="rgba(5,15,10,.46)";
+  ctx.beginPath();ctx.arc(cx,cy,198,0,Math.PI*2);ctx.fill();
+  ctx.strokeStyle="rgba(220,240,215,.45)";ctx.lineWidth=1.4;
+  ctx.beginPath();ctx.arc(cx,cy,110,0,Math.PI*2);ctx.stroke();
+  ctx.strokeStyle="rgba(230,245,224,.48)";
+  for(let i=0;i<48;i++){
+    const a=i*Math.PI/24;
+    const r1=114,r2=i%4===0?125:119;
+    ctx.beginPath();ctx.moveTo(cx+Math.cos(a)*r1,cy+Math.sin(a)*r1);
+    ctx.lineTo(cx+Math.cos(a)*r2,cy+Math.sin(a)*r2);ctx.stroke();
+  }
+  ctx.strokeStyle="rgba(230,245,224,.55)";
+  for(const e of ECHOES_LINKS){
+    const ex=cx+Math.cos(e.angle)*echoesCompassRadius;
+    const ey=cy+Math.sin(e.angle)*echoesCompassRadius;
+    ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(ex,ey);ctx.stroke();
+    ctx.fillStyle="rgba(6,17,11,.88)";
+    ctx.beginPath();ctx.arc(ex,ey,25,0,Math.PI*2);ctx.fill();
+    ctx.strokeStyle="rgba(235,245,230,.8)";ctx.stroke();
+    ctx.textAlign="center";ctx.textBaseline="middle";
+    ctx.font="500 10px 'DM Mono', monospace";
+    ctx.fillStyle="#f0f4ec";
+    ctx.fillText(e.label,ex,ey,48);
+  }
+  // Die Nadel dreht sich sanft; die vier anklickbaren Ziele bleiben stehen.
+  ctx.save();ctx.translate(cx,cy);ctx.rotate(echoesAngle);
+  ctx.fillStyle="#dcebd7";ctx.beginPath();ctx.moveTo(0,-90);
+  ctx.lineTo(10,8);ctx.lineTo(0,0);ctx.closePath();ctx.fill();
+  ctx.fillStyle="#829e83";ctx.beginPath();ctx.moveTo(0,90);
+  ctx.lineTo(-10,-8);ctx.lineTo(0,0);ctx.closePath();ctx.fill();
+  ctx.restore();
+  ctx.fillStyle="#f5fff0";ctx.beginPath();ctx.arc(cx,cy,7,0,Math.PI*2);ctx.fill();
+  ctx.restore();
+}
+function refreshEchoesTexture() {
+  if (!echoesImage || !globeContext || !globeTexture) return;
+  const w=globeCanvas.width,h=globeCanvas.height,pw=w/sections.length;
+  const center=w*(.25+3/sections.length);
+  drawPanel(globeContext,sections[3],echoesImage,center,pw,h);
+  if(center+pw/2>w)drawPanel(globeContext,sections[3],echoesImage,center-w,pw,h);
+  globeTexture.needsUpdate=true;
+}
+function handleEchoesClick(event) {
+  if(currentIndex()!==3 || !pointerStart || !editor.hidden) return false;
+  if(Math.hypot(event.clientX-pointerStart.x,event.clientY-pointerStart.y)>7)return false;
+  const rect=renderer.domElement.getBoundingClientRect();
+  pointer.set(((event.clientX-rect.left)/rect.width)*2-1,
+              -((event.clientY-rect.top)/rect.height)*2+1);
+  globeGroup.updateMatrixWorld(true);camera.updateMatrixWorld(true);
+  raycaster.setFromCamera(pointer,camera);
+  const hit=raycaster.intersectObject(globe)[0];
+  if(!hit?.uv)return false;
+  const x=hit.uv.x*4096,y=(1-hit.uv.y)*2048;
+  const center=4096*(.25+3/sections.length);
+  const dx=((x-center+2048+4096)%4096)-2048;
+  const cy=2048*(.475+.19/2);
+  const chosen=ECHOES_LINKS.find(e=>Math.hypot(dx-Math.cos(e.angle)*echoesCompassRadius,
+                                y-cy-Math.sin(e.angle)*echoesCompassRadius)<31);
+  if(!chosen)return false;
+  window.open(chosen.url,"_blank","noopener,noreferrer");
+  return true;
+}
+
 /* =========================================
    THEMENBEREICH ZEICHNEN
 ========================================= */
@@ -649,6 +720,10 @@ function drawPanel(
 
   ctx.restore();
 
+  if (section.name === "ECHOES") {
+    drawEchoesCompass(ctx, centerX, imageY + imageH / 2);
+  }
+
   // Feiner Rahmen
   ctx.strokeStyle = "rgba(226,235,220,0.48)";
   ctx.lineWidth = 2;
@@ -769,6 +844,7 @@ async function createGlobeTexture() {
     loadImage(ASSETS.contact)
   ]);
 
+  echoesImage = images[3];
   const canvas = document.createElement("canvas");
 
   canvas.width = 4096;
@@ -1265,8 +1341,12 @@ stage.addEventListener("pointermove", event => {
 
 function releasePointer(event) {
   if (event.type === "pointerup") {
-    handleContactClick(event);
-    startHomeVideoFromClick(event);
+    if (!handleEchoesClick(event)) {
+      handleContactClick(event);
+      startHomeVideoFromClick(event);
+    } else {
+      pointerStart = null;
+    }
   } else {
     pointerStart = null;
   }
@@ -1482,6 +1562,14 @@ function animate() {
     updateHomeVideoFrame();
   }
 
+  if (currentIndex() === 3 && globeTexture) {
+    const now=performance.now();
+    if (now-echoesLastDraw > 65) {
+      echoesLastDraw=now;
+      echoesAngle += .018;
+      refreshEchoesTexture();
+    }
+  }
   renderer.render(scene, camera);
 
   updateIndicator();
