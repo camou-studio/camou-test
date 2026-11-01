@@ -337,12 +337,12 @@ function drawPlayButton(ctx, centerX, centerY, size) {
    erfolgt kurzzeitig über ein natives Feld, damit Tastatur/IME funktionieren. */
 const contactValues = { name:"", email:"", subject:"", message:"", privacy:false };
 const contactHitAreas = [
-  { key:"name",    label:"NAME",     x1:-280,x2:280,y1:700,y2:815 },
-  { key:"email",   label:"E-MAIL",   x1:-280,x2:280,y1:830,y2:945 },
-  { key:"subject", label:"BETREFF",  x1:-280,x2:280,y1:960,y2:1075 },
-  { key:"message", label:"NACHRICHT",x1:-280,x2:280,y1:1090,y2:1455 },
-  { key:"privacy", label:"DATENSCHUTZ",x1:-280,x2:280,y1:1480,y2:1555 },
-  { key:"send",    label:"SENDEN",   x1:-280,x2:280,y1:1590,y2:1690 }
+  { key:"name",    label:"NAME",     x1:-280,x2:280,y1:650,y2:725 },
+  { key:"email",   label:"E-MAIL",   x1:-280,x2:280,y1:738,y2:813 },
+  { key:"subject", label:"BETREFF",  x1:-280,x2:280,y1:826,y2:901 },
+  { key:"message", label:"NACHRICHT",x1:-280,x2:280,y1:914,y2:1170 },
+  { key:"privacy", label:"DATENSCHUTZ",x1:-280,x2:280,y1:1183,y2:1245 },
+  { key:"send",    label:"SENDEN",   x1:-280,x2:280,y1:1258,y2:1330 }
 ];
 function contactText(ctx, value, x, y, maxWidth, lineHeight, maxLines) {
   const lines = String(value || "").split("\n"); let count=0;
@@ -379,29 +379,29 @@ function drawContactPanel(ctx, section, centerX, panelW, canvasH) {
     ctx.fillStyle="rgba(5,12,8,.5)";
     ctx.fillRect(left,y,width,h);ctx.strokeRect(left,y,width,h);
     if(a.key==='privacy'){
-      ctx.strokeRect(left+15,y+20,30,30);
-      if(contactValues.privacy){ctx.fillStyle="#c4d9b8";ctx.font="bold 28px Arial";ctx.fillText("✓",left+18,y+45);}
-      ctx.fillStyle="#e2e9df";ctx.font="17px 'DM Mono',monospace";
-      ctx.fillText("Angaben zur Bearbeitung speichern",left+58,y+44,width-70);
+      ctx.strokeRect(left+15,y+17,24,24);
+      if(contactValues.privacy){ctx.fillStyle="#c4d9b8";ctx.font="bold 21px Arial";ctx.fillText("✓",left+18,y+37);}
+      ctx.fillStyle="#e2e9df";ctx.font="16px 'DM Mono',monospace";
+      ctx.fillText("Angaben zur Bearbeitung speichern",left+49,y+38,width-70);
       continue;
     }
     if(a.key==='send'){
-      ctx.fillStyle="#e9f1e4";ctx.font="500 25px 'DM Mono',monospace";
-      ctx.textAlign="center";ctx.fillText("NACHRICHT SENDEN →",centerX,y+63,width-25);ctx.textAlign="left";
+      ctx.fillStyle="#e9f1e4";ctx.font="500 20px 'DM Mono',monospace";
+      ctx.textAlign="center";ctx.fillText("NACHRICHT SENDEN →",centerX,y+44,width-25);ctx.textAlign="left";
       continue;
     }
-    ctx.fillStyle="#b5c5b0";ctx.font="500 18px 'DM Mono',monospace";
-    ctx.fillText(a.label,left+15,y+27,width-30);
-    ctx.fillStyle="#f0f2eb";ctx.font="23px Manrope,Arial";
+    ctx.fillStyle="#b5c5b0";ctx.font="500 15px 'DM Mono',monospace";
+    ctx.fillText(a.label,left+15,y+22,width-30);
+    ctx.fillStyle="#f0f2eb";ctx.font="20px Manrope,Arial";
     const v=contactValues[a.key] || (a.key==='message'?"Hier Nachricht eingeben …":"Antippen zum Eingeben …");
-    contactText(ctx,v,left+15,y+65,width-30,35,a.key==='message'?8:1);
+    contactText(ctx,v,left+15,y+48,width-30,30,a.key==='message'?6:1);
   }
   ctx.fillStyle="#a9bda3";ctx.font="17px 'DM Mono',monospace";
-  ctx.textAlign="center";ctx.fillText("Datenschutz: siehe Impressum",centerX,1740,panelW*.75);
+  ctx.textAlign="center";ctx.fillText("Datenschutz: siehe Impressum",centerX,1390,panelW*.75);
   ctx.strokeStyle="rgba(226,235,220,.35)";ctx.beginPath();
-  ctx.moveTo(centerX-panelW*.38,1802);ctx.lineTo(centerX+panelW*.38,1802);ctx.stroke();
+  ctx.moveTo(centerX-panelW*.38,1455);ctx.lineTo(centerX+panelW*.38,1455);ctx.stroke();
   ctx.fillStyle="#b5c5b0";ctx.font="19px 'DM Mono',monospace";
-  ctx.fillText("05 / 05",centerX,1884);
+  ctx.fillText("05 / 05",centerX,1535);
   ctx.restore();
 }
 function redrawContactTexture(){
