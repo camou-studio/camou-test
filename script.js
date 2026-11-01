@@ -1012,6 +1012,9 @@ function startHomeVideoFromClick(event) {
   pointer.y =
     -((event.clientY - rect.top) / rect.height) * 2 + 1;
 
+  // Nach einer Drag-/Menü-Animation müssen die Weltmatrizen aktuell sein.
+  globeGroup.updateMatrixWorld(true);
+  camera.updateMatrixWorld(true);
   raycaster.setFromCamera(pointer, camera);
 
   const intersections = raycaster.intersectObject(globe);
@@ -1074,18 +1077,18 @@ function startHomeVideoFromClick(event) {
       homeVideoStarted = true;
       homeVideoPlaying = true;
       homeVideoStarting = false;
-
       updateHomeVideoFrame();
-
-      console.info("CAMOU: Home-Video gestartet/fortgesetzt.");
     })
     .catch(error => {
       homeVideoStarting = false;
-
-      console.error(
-        "CAMOU: Das Video konnte nicht gestartet werden.",
-        error
-      );
+      console.error("CAMOU: Home-Video nicht abspielbar", error);
+      // Fehlermeldung statt stillem Fehlschlag; so lässt sich zwischen
+      // fehlender Datei, Codec und Browser-Blockade unterscheiden.
+      const detail = homeVideo.error
+        ? ` (Medienfehler ${homeVideo.error.code})`
+        : ` (${error.name || "unbekannt"})`;
+      alert("Das HOME-Video konnte nicht gestartet werden" + detail +
+            ". Bitte assets/test.webm und dessen Codec prüfen.");
     });
 }
 
