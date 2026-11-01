@@ -11,6 +11,9 @@
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 <style>
+/* Das globale CAMOU-CSS sperrt Scrolling. Nur auf der Rechtsseite freigeben. */
+html:has(body.legal-page) { height:auto; min-height:100%; overflow-y:auto; overflow-x:hidden; }
+body.legal-page { height:auto; min-height:100svh; overflow-y:auto; overflow-x:hidden; overscroll-behavior-y:auto; }
 .legal-page { min-height:100svh; background:radial-gradient(ellipse at 50% 25%,#29352c 0%,#182019 48%,#101411 90%); }
 .legal-main { max-width:900px; margin:0 auto; padding:118px 26px 110px; }
 .legal-kicker { font:11px var(--mono); letter-spacing:.16em; color:var(--accent); }

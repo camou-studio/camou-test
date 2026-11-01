@@ -218,6 +218,7 @@ homeVideo.playsInline = true;
 homeVideo.preload = "auto";
 
 let homeVideoPlaying = false;
+let homeVideoStarted = false;
 let homeVideoStarting = false;
 
 let globeCanvas = null;
@@ -614,7 +615,7 @@ function drawPanel(
   // Video oder bisheriges Vorschaubild
   if (
     section.name === "HOME" &&
-    homeVideoPlaying &&
+    homeVideoStarted &&
     homeVideo.readyState >= 2
   ) {
     drawCoverCrop(
@@ -702,7 +703,7 @@ function drawPanel(
 
 function updateHomeVideoFrame() {
   if (
-    !homeVideoPlaying ||
+    !homeVideoStarted ||
     !globeCanvas ||
     !globeContext ||
     !globeTexture ||
@@ -745,6 +746,12 @@ function updateHomeVideoFrame() {
   );
 
   globeContext.restore();
+
+  if (homeVideo.paused) {
+    globeContext.save();
+    drawPlayButton(globeContext, homeCenter, imageY + imageH / 2, 48);
+    globeContext.restore();
+  }
 
   globeTexture.needsUpdate = true;
 }
@@ -930,6 +937,8 @@ editor.addEventListener("pointermove",e=>e.stopPropagation());
 editor.addEventListener("pointerup",e=>e.stopPropagation());
 function handleContactClick(event){
   if(!pointerStart||!editor.hidden)return;
+  // CONTACT-Hit-Tests nur dann ausführen, wenn CONTACT vorne ist.
+  if(currentIndex() !== 4)return;
   if(Math.hypot(event.clientX-pointerStart.x,event.clientY-pointerStart.y)>7)return;
   const rect=renderer.domElement.getBoundingClientRect();
   pointer.set(((event.clientX-rect.left)/rect.width)*2-1,-((event.clientY-rect.top)/rect.height)*2+1);
@@ -993,7 +1002,7 @@ function startHomeVideoFromClick(event) {
   // Ziehen soll weiterhin nur die Kugel bewegen
   if (movement > 7) return;
 
-  if (homeVideoPlaying || homeVideoStarting) return;
+  if (homeVideoStarting || !globeTexture) return;
 
   const rect = renderer.domElement.getBoundingClientRect();
 
@@ -1044,7 +1053,16 @@ function startHomeVideoFromClick(event) {
     textureY >= imageY &&
     textureY <= imageY + imageH;
 
-  if (!isInsideButton || !isInsideImage) return;
+  // Der erste Start akzeptiert das sichtbare Play-Symbol und die
+  // umgebende Videofläche; später kann dieselbe Fläche pausieren/fortsetzen.
+  if (!isInsideImage) return;
+
+  if (homeVideoStarted && !homeVideo.paused) {
+    homeVideo.pause();
+    homeVideoPlaying = false;
+    updateHomeVideoFrame();
+    return;
+  }
 
   homeVideoStarting = true;
 
@@ -1053,12 +1071,13 @@ function startHomeVideoFromClick(event) {
 
   homeVideo.play()
     .then(() => {
+      homeVideoStarted = true;
       homeVideoPlaying = true;
       homeVideoStarting = false;
 
       updateHomeVideoFrame();
 
-      console.info("CAMOU: Home-Video gestartet.");
+      console.info("CAMOU: Home-Video gestartet/fortgesetzt.");
     })
     .catch(error => {
       homeVideoStarting = false;
