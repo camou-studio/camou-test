@@ -55,7 +55,7 @@ const sections = [
     eyebrow: "LATEST RELEASE",
     title: ["f r a g m e n t e"],
     body: [
-      "songs, vom wind getragen,",
+      "songs, vom wind getragen,"
        "zwischen licht und schatten.",
       "zwischen dem, was man sieht ",
       "und dem, was bleibt."
@@ -340,6 +340,144 @@ function drawPlayButton(ctx, centerX, centerY, size) {
    THEMENBEREICH ZEICHNEN
 ========================================= */
 
+
+/* =========================================
+   CONTACT: INTERAKTIVE FELDER AUF DER KUGELTEXTUR
+   Die Eingabe erfolgt temporär per HTML-Tastaturfeld.
+========================================= */
+const contactValues = {name:"",email:"",subject:"",message:"",privacy:false};
+const contactFields = [
+  {key:"name",label:"NAME",y:.245,h:.062},
+  {key:"email",label:"E-MAIL",y:.326,h:.062},
+  {key:"subject",label:"BETREFF",y:.407,h:.062},
+  {key:"message",label:"NACHRICHT",y:.488,h:.175},
+  {key:"privacy",label:"DATENSCHUTZ",y:.690,h:.052},
+  {key:"send",label:"NACHRICHT SENDEN",y:.770,h:.058}
+];
+let contactTextureImages=null;
+let contactMessage="";
+const contactEditor=document.getElementById("contact-editor");
+const contactInput=document.getElementById("contact-editor-input");
+const contactTextarea=document.getElementById("contact-editor-textarea");
+let editingContactKey=null;
+function ellipsis(ctx,value,maxWidth){
+  let v=String(value||"").replace(/\s+/g," ");
+  while(v.length && ctx.measureText(v).width>maxWidth) v=v.slice(0,-2)+"…";
+  return v;
+}
+function drawContactForm(ctx,cx,pw,ch){
+  const left=cx-pw*.34, width=pw*.68;
+  ctx.save();
+  ctx.textAlign="center";
+  ctx.fillStyle="#f0f2eb";
+  ctx.font="300 124px Manrope,Arial";
+  ctx.fillText("u",cx,ch*.115);
+  ctx.font="500 20px 'DM Mono',monospace";
+  ctx.fillStyle="#bdcbb7";
+  ctx.fillText("04 — GET IN TOUCH",cx,ch*.192);
+  ctx.font="300 55px Manrope,Arial";
+  ctx.fillStyle="#f0f2eb";
+  ctx.fillText("Contact",cx,ch*.227);
+  contactFields.forEach(f=>{
+    const y=ch*f.y, h=ch*f.h;
+    ctx.fillStyle=f.key==="send"?"#b6c5aa":"rgba(7,15,10,.72)";
+    ctx.fillRect(left,y,width,h);
+    ctx.strokeStyle="rgba(225,235,220,.6)";
+    ctx.lineWidth=2;ctx.strokeRect(left,y,width,h);
+    ctx.textAlign="left";
+    ctx.font="500 16px 'DM Mono',monospace";
+    ctx.fillStyle=f.key==="send"?"#101411":"#b6c5aa";
+    if(f.key==="send"){
+      ctx.textAlign="center";ctx.font="500 21px 'DM Mono',monospace";
+      ctx.fillText("NACHRICHT SENDEN →",cx,y+h*.64);
+    }else if(f.key==="privacy"){
+      ctx.strokeRect(left+18,y+h*.25,25,25);
+      if(contactValues.privacy){ctx.fillText("✓",left+21,y+h*.68)}
+      ctx.font="17px Manrope,Arial";
+      ctx.fillText("Angaben zur Antwort speichern",left+58,y+h*.61);
+    }else{
+      ctx.fillText(f.label,left+15,y+27);
+      ctx.font="21px Manrope,Arial";
+      ctx.fillStyle="#f0f2eb";
+      const value=contactValues[f.key]||"Zum Eingeben antippen …";
+      const lines=f.key==="message"?String(value).split(/\n/).slice(0,3):[value];
+      lines.forEach((line,i)=>ctx.fillText(ellipsis(ctx,line,width-30),left+15,y+60+i*31));
+    }
+  });
+  ctx.textAlign="center";ctx.fillStyle="#c1d0b7";
+  ctx.font="17px 'DM Mono',monospace";
+  ctx.fillText(ellipsis(ctx,contactMessage,pw*.7),cx,ch*.868);
+  ctx.font="17px 'DM Mono',monospace";
+  ctx.fillText("05 / 05",cx,ch*.928);
+  ctx.restore();
+}
+function refreshContactTexture(){
+  if(!globeContext || !globeTexture || !contactTextureImages) return;
+  const pw=globeCanvas.width/sections.length;
+  const cx=globeCanvas.width*(.25+4/sections.length);
+  drawPanel(globeContext,sections[4],contactTextureImages[4],cx,pw,globeCanvas.height);
+  drawPanel(globeContext,sections[4],contactTextureImages[4],cx-globeCanvas.width,pw,globeCanvas.height);
+  globeTexture.needsUpdate=true;
+}
+function editContactField(key){
+  editingContactKey=key;
+  const isMessage=key==="message";
+  contactInput.hidden=isMessage;contactTextarea.hidden=!isMessage;
+  const field=isMessage?contactTextarea:contactInput;
+  field.value=contactValues[key]||"";
+  field.type=key==="email"?"email":"text";
+  document.getElementById("contact-editor-label").textContent=contactFields.find(f=>f.key===key).label;
+  contactEditor.hidden=false;
+  field.focus();
+}
+function closeContactEditor(save){
+  if(save && editingContactKey){
+    contactValues[editingContactKey]=(editingContactKey==="message"?contactTextarea:contactInput).value;
+    refreshContactTexture();
+  }
+  editingContactKey=null;contactEditor.hidden=true;
+}
+document.getElementById("contact-editor-save").addEventListener("click",()=>closeContactEditor(true));
+document.getElementById("contact-editor-cancel").addEventListener("click",()=>closeContactEditor(false));
+contactEditor.addEventListener("pointerdown",e=>e.stopPropagation());
+contactEditor.addEventListener("pointerup",e=>e.stopPropagation());
+contactEditor.addEventListener("pointermove",e=>e.stopPropagation());
+function submitContact(){
+  const v=contactValues;
+  if(!v.name.trim()||!/^\S+@\S+\.\S+$/.test(v.email)||!v.subject.trim()||!v.message.trim()){
+    contactMessage="BITTE ALLE FELDER AUSFÜLLEN";refreshContactTexture();return;
+  }
+  if(!v.privacy){contactMessage="BITTE DATENSCHUTZ BESTÄTIGEN";refreshContactTexture();return;}
+  /* Kein fremder Backend-Endpunkt: Mail-App mit vorausgefüllter Nachricht. */
+  const subject=encodeURIComponent("CAMOU: "+v.subject);
+  const body=encodeURIComponent(`Name: ${v.name}\nE-Mail: ${v.email}\n\n${v.message}`);
+  contactMessage="E-MAIL-PROGRAMM WIRD GEÖFFNET";refreshContactTexture();
+  window.location.href=`mailto:camou.kontakt@gmail.com?subject=${subject}&body=${body}`;
+}
+function contactTap(event){
+  if(!globeTexture || !contactEditor.hidden) return false;
+  const rect=renderer.domElement.getBoundingClientRect();
+  pointer.x=((event.clientX-rect.left)/rect.width)*2-1;
+  pointer.y=-((event.clientY-rect.top)/rect.height)*2+1;
+  raycaster.setFromCamera(pointer,camera);
+  const hits=raycaster.intersectObject(globe);
+  if(!hits.length||!hits[0].uv) return false;
+  const uv=hits[0].uv, cw=globeCanvas.width,ch=globeCanvas.height;
+  const pw=cw/sections.length, center=cw*(.25+4/sections.length);
+  let tx=uv.x*cw;
+  while(tx-center>cw/2)tx-=cw;
+  while(tx-center< -cw/2)tx+=cw;
+  const left=center-pw*.34;
+  const ty=(1-uv.y)*ch;
+  if(tx<left||tx>left+pw*.68)return false;
+  const field=contactFields.find(f=>ty>=f.y*ch&&ty<=(f.y+f.h)*ch);
+  if(!field)return false;
+  if(field.key==="privacy"){contactValues.privacy=!contactValues.privacy;refreshContactTexture();}
+  else if(field.key==="send")submitContact();
+  else editContactField(field.key);
+  return true;
+}
+
 function drawPanel(
   ctx,
   section,
@@ -371,6 +509,12 @@ function drawPanel(
 
   ctx.fillStyle = background;
   ctx.fillRect(x, 0, panelW, canvasH);
+
+  if(section.name==="CONTACT"){
+    drawContactForm(ctx,centerX,panelW,canvasH);
+    ctx.restore();
+    return;
+  }
 
   /* 2. DEZENTER LICHTSCHEIN */
 
@@ -521,15 +665,6 @@ function drawPanel(
   ctx.rect(imageX, imageY, imageW, imageH);
   ctx.clip();
 
-  if (section.name === "CONTACT") {
-    ctx.fillStyle = "rgba(12,22,16,.95)";
-    ctx.fillRect(imageX, imageY, imageW, imageH);
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.font = "500 22px 'DM Mono', monospace";
-    ctx.fillStyle = "#d8e6d2";
-    ctx.fillText("NACHRICHT", centerX, imageY + imageH / 2, imageW * .9);
-  } else {
   // Home: Video zeigen, sobald es einmal gestartet wurde
   if (
     section.name === "HOME" &&
@@ -575,7 +710,6 @@ function drawPanel(
     }
   }
 
-  }
   ctx.restore();
 
   // Feiner Rahmen
@@ -702,6 +836,8 @@ async function createGlobeTexture() {
     loadImage(ASSETS.archive),
     loadImage(ASSETS.contact)
   ]);
+
+  contactTextureImages=images;
 
   const canvas = document.createElement("canvas");
 
@@ -853,6 +989,8 @@ function startHomeVideoFromClick(event) {
 
   // Ziehen soll weiterhin nur die Kugel bewegen
   if (movement > 7) return;
+  if(currentIndex()===4 && contactTap(event)) return;
+
 
   if (homeVideoStarting) return;
 
@@ -1200,22 +1338,8 @@ function currentIndex() {
   ) % sections.length;
 }
 
-const contactOverlay = document.getElementById("globe-contact");
-
-function updateContactOverlay() {
-  if (!contactOverlay) return;
-  const full = Math.PI * 2;
-  const contactAngle = -4 * sectionStep;
-  const delta = Math.atan2(Math.sin(rotationY - contactAngle), Math.cos(rotationY - contactAngle));
-  const visible = Math.abs(delta) < 0.12 && Math.abs(rotationX) < 0.35 && !isDragging;
-  contactOverlay.classList.toggle("is-visible", visible);
-  contactOverlay.setAttribute("aria-hidden", String(!visible));
-  contactOverlay.inert = !visible;
-}
-
 function updateIndicator() {
   const index = currentIndex();
-  updateContactOverlay();
 
   sectionLabel.textContent =
     sections[index].name;
@@ -1305,6 +1429,7 @@ for (const [id, url] of [
 ========================================= */
 
 window.addEventListener("keydown", event => {
+  if(!contactEditor.hidden) return;
   if (event.key === "ArrowRight") {
     goToSection(currentIndex() + 1);
   }
@@ -1407,34 +1532,3 @@ window.addEventListener("resize", resize);
 
 setZoom(defaultZoom);
 updateIndicator();
-
-/* CONTACT: Formularbedienung darf die Kugel nicht drehen oder zoomen. */
-if (contactOverlay) {
-  ["pointerdown", "pointermove", "pointerup", "pointercancel", "wheel"].forEach(type => {
-    contactOverlay.addEventListener(type, event => event.stopPropagation(), {passive:type !== "wheel"});
-  });
-}
-
-/* Bestehende Kontaktformular-Felder und Versandziel aus kontakt.html. */
-const CAMOU_CONTACT_ENDPOINT = "https://script.google.com/macros/s/AKfycby3SfFxFDJQZNL0PxI75Z0O_HyDZl_MoC2b8jcW5PLy0kwPAuiOnK9macrxFTaUboXftg/exec";
-const camouContactForm = document.getElementById("camou-contact-form");
-if (camouContactForm) {
-  camouContactForm.addEventListener("submit", async event => {
-    event.preventDefault();
-    const status = document.getElementById("camou-form-status");
-    const button = document.getElementById("camou-send");
-    const data = new FormData(camouContactForm);
-    if (data.get("website")) return;
-    button.disabled = true;
-    status.textContent = "nachricht wird gesendet ...";
-    try {
-      await fetch(CAMOU_CONTACT_ENDPOINT, {method:"POST", body:data, mode:"no-cors"});
-      camouContactForm.reset();
-      status.textContent = "anfrage übermittelt. der empfang kann technisch nicht bestätigt werden.";
-    } catch (error) {
-      status.textContent = "übermittlung fehlgeschlagen. bitte erneut versuchen.";
-    } finally {
-      button.disabled = false;
-    }
-  });
-}

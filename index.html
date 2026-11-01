@@ -46,26 +46,6 @@
     <section class="globe-stage" aria-label="Drehbare Camou-Kugel">
 
       <div id="globe"></div>
-      <!-- CONTACT: echtes Formular, nur ueber der Vorderseite der Kugel sichtbar -->
-      <div class="globe-contact" id="globe-contact" aria-hidden="true">
-        <form id="camou-contact-form" class="camou-contact-form" aria-label="Kontaktformular">
-          <div class="camou-contact-heading">NACHRICHT SCHREIBEN</div>
-          <label for="camou-name">name</label>
-          <input id="camou-name" name="name" autocomplete="name" placeholder="dein name" required>
-          <label for="camou-email">e-mail</label>
-          <input id="camou-email" name="email" type="email" autocomplete="email" placeholder="deine@mail.com" required>
-          <label for="camou-subject">betreff</label>
-          <input id="camou-subject" name="subject" placeholder="um was gehts?" required>
-          <label for="camou-message">nachricht</label>
-          <textarea id="camou-message" name="message" placeholder="hallo camou, ..." required></textarea>
-          <div class="camou-honeypot" aria-hidden="true"><label for="camou-website">website</label><input id="camou-website" name="website" tabindex="-1" autocomplete="off"></div>
-          <label class="camou-consent"><input type="checkbox" name="privacy" value="zugestimmt" required><span>meine angaben dürfen zur beantwortung/verarbeitung gespeichert werden</span></label>
-          <a class="camou-privacy-link" href="impressum.html">impressum / datenschutz</a>
-          <button type="submit" id="camou-send">nachricht senden →</button>
-          <p id="camou-form-status" role="status" aria-live="polite"></p>
-        </form>
-      </div>
-
 
       <div class="zoom-controls" aria-label="Zoom">
         <button id="zoom-in" aria-label="Vergrößern">+</button>
@@ -84,6 +64,12 @@
         <span id="section-number">01 / 05</span>
       </div>
 
+      <div class="contact-editor" id="contact-editor" hidden role="dialog" aria-modal="true" aria-label="Kontaktfeld bearbeiten">
+        <label id="contact-editor-label" for="contact-editor-input">Eingabe</label>
+        <input id="contact-editor-input" autocomplete="off">
+        <textarea id="contact-editor-textarea" rows="5" hidden></textarea>
+        <div class="contact-editor-actions"><button id="contact-editor-cancel" type="button">Abbrechen</button><button id="contact-editor-save" type="button">Übernehmen</button></div>
+      </div>
     </section>
 
     <footer class="footer">

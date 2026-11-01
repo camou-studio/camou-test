@@ -387,46 +387,11 @@ a {
   }
 }
 
-/* CONTACT: editierbare HTML-Felder als Oberflaeche ueber der Kugel. */
-.globe-contact {
-  position:absolute; z-index:7; left:50%; top:50%;
-  width:min(290px, 38vw); max-height:min(66vh, 520px);
-  transform:translate(-50%,-50%); opacity:0; visibility:hidden;
-  pointer-events:none; transition:opacity .18s ease, visibility .18s ease;
-}
-.globe-contact.is-visible { opacity:1; visibility:visible; pointer-events:auto; }
-.camou-contact-form {
-  display:flex; flex-direction:column; gap:5px;
-  padding:12px 14px; max-height:inherit; overflow-y:auto;
-  color:#edf1e9; background:rgba(13,23,17,.90);
-  border:1px solid rgba(225,235,220,.42); border-radius:9px;
-  box-shadow:0 10px 32px rgba(0,0,0,.32);
-  scrollbar-width:thin; scrollbar-color:#80927d transparent;
-  font:10px var(--mono); letter-spacing:.2px;
-}
-.camou-contact-heading {font-size:11px; letter-spacing:1.4px; margin-bottom:5px; color:#d8e6d2;}
-.camou-contact-form label {font-size:9px; color:#c9d6c5;}
-.camou-contact-form input:not([type=checkbox]), .camou-contact-form textarea {
-  display:block; width:100%; min-width:0; border:1px solid rgba(225,235,220,.30);
-  border-radius:3px; background:rgba(255,255,255,.06); color:white;
-  padding:7px 8px; font:11px var(--sans); outline-offset:2px;
-}
-.camou-contact-form textarea {resize:vertical; min-height:55px; max-height:125px;}
-.camou-contact-form input:focus, .camou-contact-form textarea:focus {border-color:#c1d0b7;}
-.camou-contact-form .camou-consent {display:flex; align-items:flex-start; gap:7px; line-height:1.35; margin-top:5px;}
-.camou-consent input {accent-color:#b6c5aa; margin:1px 0 0; flex:0 0 auto;}
-.camou-privacy-link {color:#d4e1cd; font-size:9px; text-decoration:underline;}
-.camou-contact-form button {margin-top:4px; padding:9px; border:1px solid #c1d0b7; background:#c1d0b7; color:#101411; cursor:pointer; font:10px var(--mono);}
-.camou-contact-form button:disabled {opacity:.55; cursor:wait;}
-#camou-form-status {font-size:9px; margin:0; line-height:1.35;}
-.camou-honeypot {position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden;}
-@media (max-width:700px) {
-  .globe-contact {width:min(240px, 58vw); max-height:min(54svh, 390px);}
-  .camou-contact-form {padding:9px 10px;gap:4px;}
-  .camou-contact-form input:not([type=checkbox]), .camou-contact-form textarea {padding:5px 6px;font-size:10px;}
-  .camou-contact-form textarea {min-height:42px;}
-}
-@media (max-height:540px) { .globe-contact {max-height:60svh;} }
-
-.camou-contact-form {touch-action:pan-y; overscroll-behavior:contain;}
-.camou-contact-form input, .camou-contact-form textarea, .camou-contact-form button {touch-action:manipulation;}
+/* Temporärer Tastatureditor; die sichtbaren Felder bleiben auf der Kugel. */
+.contact-editor[hidden]{display:none!important}
+.contact-editor{position:absolute;z-index:30;left:50%;top:50%;transform:translate(-50%,-50%);width:min(420px,90vw);padding:20px;background:#18221b;border:1px solid #b6c5aa;box-shadow:0 15px 50px #000b;color:#edf1e9;cursor:auto;touch-action:auto}
+.contact-editor label{display:block;font:12px var(--mono);margin-bottom:10px;text-transform:uppercase}
+.contact-editor input,.contact-editor textarea{width:100%;padding:12px;background:#101411;border:1px solid #b6c5aa;color:white;font:15px var(--sans);resize:vertical}
+.contact-editor-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:12px}
+.contact-editor button{background:transparent;color:white;border:1px solid #b6c5aa;padding:9px 12px;cursor:pointer}
+.contact-editor button:last-child{background:#b6c5aa;color:#101411}
