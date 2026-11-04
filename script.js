@@ -777,17 +777,26 @@ window.addEventListener(
   { passive: true }
 );
 
+
 function sensorMode() {
+  // Sensoren nur bei aktivierter Checkbox verwenden
+  if (!sensorOptIn) {
+    return "KUGELSTEUERUNG";
+  }
+
+  // Kompasssensor hat Priorität
   if (fresh(headingLastAt)) {
     return "KOMPASS AKTIV";
   }
 
+  // Alternativ Bewegungssensor
   if (fresh(motionLastAt)) {
     return "BEWEGUNG AKTIV";
   }
 
   return "KUGELSTEUERUNG";
 }
+
 
 /* =========================================
    SENSORAKTIVIERUNG AUF DER KUGEL
@@ -894,11 +903,19 @@ function requestSensorAccess() {
 
   sensorOptIn = !sensorOptIn;
 
-  if (!sensorOptIn) {
-    sensorStatusText = "AUTOMATISCHE ERKENNUNG";
-    refreshEchoesTexture();
-    return;
-  }
+
+if (!sensorOptIn) {
+  // Aktuelle Nadelposition übernehmen
+  fallbackAngle = needleAngle;
+  targetNeedleAngle = needleAngle;
+
+  // Zur Kugelsteuerung zurückkehren
+  sensorStatusText = "KUGELSTEUERUNG";
+
+  refreshEchoesTexture();
+  return;
+}
+
 
   if (!window.isSecureContext) {
     sensorOptIn = false;
