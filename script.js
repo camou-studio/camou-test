@@ -1541,6 +1541,49 @@ function drawVisualViewer(ctx, cx, iy, iw, ih) {
   ctx.lineWidth = 2;
   ctx.stroke();
 
+/* =========================================
+   PRESS – MARKIERUNG DES SCHALTERS
+========================================= */
+
+// Dezenter salbeigrüner Leuchtring
+ctx.save();
+
+ctx.shadowColor = "rgba(190, 235, 165, 0.65)";
+ctx.shadowBlur = 16;
+
+ctx.strokeStyle = "#c5e8b6";
+ctx.lineWidth = 2.5;
+
+ctx.beginPath();
+ctx.arc(
+  leverX,
+  knobY,
+  24,
+  0,
+  Math.PI * 2
+);
+ctx.stroke();
+
+ctx.restore();
+
+// PRESS-Beschriftung direkt auf dem Knopf
+ctx.save();
+
+ctx.font = "700 15px 'DM Mono', monospace";
+ctx.textAlign = "center";
+ctx.textBaseline = "middle";
+
+ctx.fillStyle = "#101b12";
+
+ctx.fillText(
+  "PRESS",
+  leverX,
+  knobY + 1,
+  38
+);
+
+ctx.restore();
+
   /* Pfeil */
 
   ctx.fillStyle = "rgba(226,237,218,.85)";
@@ -1722,7 +1765,7 @@ function drawPanel(
   ctx.fillText(
     section.eyebrow,
     cx,
-    h * 0.305,
+    h * 0.24,
     contentW
   );
 
@@ -1735,7 +1778,7 @@ function drawPanel(
   // Einheitliche Schriftgrösse für alle Bereiche
   ctx.font = "300 58px Manrope, Arial";
 
-  const titleY = h * 0.345;
+  const titleY = h * 0.295;
 
   section.title.forEach((line, i) => {
     ctx.fillText(
