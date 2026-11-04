@@ -318,6 +318,48 @@ let homeVideoPlaying = false;
 let homeVideoStarting = false;
 
 /* =========================================
+   VIDEO-FRAME-OPTIMIERUNG
+========================================= */
+
+let homeVideoFrameRequest = null;
+let lastVideoFallbackPaint = 0;
+
+function startHomeVideoFrameUpdates() {
+  if (
+    homeVideoFrameRequest !== null ||
+    typeof homeVideo.requestVideoFrameCallback !== "function"
+  ) return;
+
+  const onVideoFrame = () => {
+    homeVideoFrameRequest = null;
+
+    if (!homeVideoPlaying) return;
+
+    updateHomeVideoFrame();
+
+    homeVideoFrameRequest =
+      homeVideo.requestVideoFrameCallback(onVideoFrame);
+  };
+
+  homeVideoFrameRequest =
+    homeVideo.requestVideoFrameCallback(onVideoFrame);
+}
+
+function stopHomeVideoFrameUpdates() {
+  if (
+    homeVideoFrameRequest !== null &&
+    typeof homeVideo.cancelVideoFrameCallback === "function"
+  ) {
+    homeVideo.cancelVideoFrameCallback(
+      homeVideoFrameRequest
+    );
+  }
+
+  homeVideoFrameRequest = null;
+}
+
+
+/* =========================================
    BILDER LADEN
 ========================================= */
 
@@ -2593,22 +2635,31 @@ function handleGlobeClick(event) {
     homeVideoStarted &&
     !homeVideo.paused
   ) {
-    homeVideo.pause();
-    homeVideoPlaying = false;
-    updateHomeVideoFrame();
+
+homeVideo.pause();
+homeVideoPlaying = false;
+
+stopHomeVideoFrameUpdates();
+
+updateHomeVideoFrame();
+
     return;
   }
 
   homeVideoStarting = true;
 
-  homeVideo.play()
-    .then(() => {
-      homeVideoStarted = true;
-      homeVideoPlaying = true;
-      homeVideoStarting = false;
 
-      updateHomeVideoFrame();
-    })
+homeVideo.play()
+  .then(() => {
+    homeVideoStarted = true;
+    homeVideoPlaying = true;
+    homeVideoStarting = false;
+
+    updateHomeVideoFrame();
+
+    startHomeVideoFrameUpdates();
+  })
+
     .catch(error => {
       homeVideoStarting = false;
 
@@ -3076,11 +3127,21 @@ function animate(now = 0) {
     0
   );
 
-  /* Home Video */
 
-  if (homeVideoPlaying) {
-    updateHomeVideoFrame();
-  }
+/* =========================================
+   HOME VIDEO – FRAME-SYNCHRONISATION
+========================================= */
+
+if (
+  homeVideoPlaying &&
+  typeof homeVideo.requestVideoFrameCallback !== "function" &&
+  now - lastVideoFallbackPaint >= 33
+) {
+  lastVideoFallbackPaint = now;
+
+  updateHomeVideoFrame();
+}
+
 
   /* Kompass Fallback */
 
