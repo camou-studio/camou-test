@@ -286,6 +286,7 @@ let globeCanvas = null;
 let globeContext = null;
 let globeTexture = null;
 let baseTextureCanvas = null;
+let sceneNeedsRender = true;
 
 let echoesImage = null;
 
@@ -1554,6 +1555,7 @@ function refreshVisualsTexture() {
   );
 
   globeTexture.needsUpdate = true;
+sceneNeedsRender = true;
 }
 
 /* =========================================
@@ -1998,6 +2000,7 @@ createGlobeTexture()
   .then(texture => {
     globe.material.map = texture;
     globe.material.needsUpdate = true;
+sceneNeedsRender = true;
 
     console.info(
       "CAMOU: Kugeltextur geladen."
@@ -2055,6 +2058,7 @@ function updateHomeVideoFrame() {
   }
 
   globeTexture.needsUpdate = true;
+sceneNeedsRender = true;
 }
 
 /* =========================================
@@ -2101,6 +2105,7 @@ function refreshEchoesTexture() {
   );
 
   globeTexture.needsUpdate = true;
+sceneNeedsRender = true;
 }
 
 /* =========================================
@@ -2630,6 +2635,7 @@ function setZoom(value) {
   );
 
   camera.position.z = currentZoom;
+sceneNeedsRender = true;
 }
 
 $("zoom-in")?.addEventListener(
@@ -3083,6 +3089,14 @@ function animate(now = 0) {
 
   const deltaY =
     rotationY - lastGlobeY;
+   
+if (
+  Math.abs(deltaX) > 1e-9 ||
+  Math.abs(deltaY) > 1e-9
+) {
+  sceneNeedsRender = true;
+}
+
 
   lastGlobeX = rotationX;
   lastGlobeY = rotationY;
@@ -3143,10 +3157,16 @@ function animate(now = 0) {
     }
   }
 
+
+if (sceneNeedsRender) {
+  sceneNeedsRender = false;
+
   renderer.render(
     scene,
     camera
   );
+}
+
 
   updateIndicator();
 }
@@ -3176,6 +3196,7 @@ function resize() {
   renderer.setPixelRatio(
     Math.min(window.devicePixelRatio, 2)
   );
+   sceneNeedsRender = true;
 }
 
 window.addEventListener(
