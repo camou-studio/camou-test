@@ -309,7 +309,7 @@ const homeVideo = document.createElement("video");
 homeVideo.src = ASSETS.homeVideo;
 homeVideo.loop = true;
 homeVideo.playsInline = true;
-homeVideo.preload = "auto";
+homeVideo.preload = "none";
 homeVideo.volume = 1;
 
 let homeVideoStarted = false;
@@ -457,17 +457,17 @@ function sectionColor(position, vertical) {
 function drawBackground(ctx, width, height) {
   const small = document.createElement("canvas");
 
-  small.width = 1024;
-  small.height = 512;
+  small.width = 512;
+  small.height = 256;
 
   const g = small.getContext("2d");
-  const image = g.createImageData(1024, 512);
+  const image = g.createImageData(512, 256);
 
-  for (let y = 0; y < 512; y++) {
-    const v = y / 511;
+  for (let y = 0; y < 256; y++) {
+    const v = y / 255;
 
-    for (let x = 0; x < 1024; x++) {
-      const u = x / 1024;
+    for (let x = 0; x < 512; x++) {
+      const u = x / 512;
 
       const pole = smooth(
         Math.min(
@@ -495,7 +495,7 @@ function drawBackground(ctx, width, height) {
           Math.pow(Math.abs(v - 0.5) * 2, 2)
         );
 
-      const j = (y * 1024 + x) * 4;
+      const j = (y * 512 + x) * 4;
 
       for (let k = 0; k < 3; k++) {
         image.data[j + k] =
@@ -2115,20 +2115,18 @@ function currentIndex() {
   return ((n % 5) + 5) % 5;
 }
 
+let lastIndicatorIndex = -1;
 function updateIndicator() {
   const index = currentIndex();
+  if (index === lastIndicatorIndex) return;
+  lastIndicatorIndex = index;
 
-  $("current-section").textContent =
-    sections[index].name;
-
+  $("current-section").textContent = sections[index].name;
   $("section-number").textContent =
     `${String(index + 1).padStart(2, "0")} / 05`;
 
   navButtons.forEach((button, i) => {
-    button.classList.toggle(
-      "active",
-      i === index
-    );
+    button.classList.toggle("active", i === index);
   });
 }
 
