@@ -48,7 +48,7 @@ const sections = [
     eyebrow: "02 — Releases",
     title: ["f r a g m e n t e"],
     body: [
-      "Songs, vom Wind getragen,",
+      "vom Wind getragen,",
        "zwischen Licht und Schatten.",
       "zwischen dem, was man sieht ",
       "und dem, was bleibt."
