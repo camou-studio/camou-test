@@ -49,7 +49,7 @@ const sections = [
     eyebrow: "02 — Releases",
     title: ["f r a g m e n t e"],
     body: [
-      "Songs, vom Wind getragen,"
+      "Songs, vom Wind getragen,",
        "zwischen Licht und Schatten.",
       "zwischen dem, was man sieht ",
       "und dem, was bleibt."
@@ -74,7 +74,7 @@ const sections = [
     title: ["Echoes"],
     body: [
       "Songs und Spuren, die an",
-      "verschiedenen Orten widerhallen."
+      "verschiedenen Orten widerhallen.",
       "Folge Ihnen"
     ],
     image: ASSETS.archive
