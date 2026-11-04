@@ -38,7 +38,7 @@ const sections = [
   {
     name: "HOME",
     poleLetter: "c",
-    eyebrow: "NEW PROJECT / 001",
+    eyebrow: "01 — NEW PROJECT",
     title: ["c a m o u"],
     body: ["Gleiche Fragen.", "Neue Perspektiven."],
     image: ASSETS.home
@@ -46,11 +46,12 @@ const sections = [
   {
     name: "MUSIC",
     poleLetter: "a",
-    eyebrow: "LATEST RELEASE",
+    eyebrow: "02 — Releases",
     title: ["f r a g m e n t e"],
     body: [
-      "Ein Song zwischen Licht und Schatten.",
-      "Zwischen dem, was man sieht –",
+      "Songs, vom Wind getragen,"
+      "zwischen Licht und Schatten.",
+      "Zwischen dem, was man sieht",
       "und dem, was bleibt."
     ],
     image: ASSETS.music
@@ -58,7 +59,7 @@ const sections = [
   {
     name: "VISUALS",
     poleLetter: "m",
-    eyebrow: "02 — VISUAL WORK",
+    eyebrow: "03 — VISUAL WORK",
     title: ["Visuals"],
     body: [
       "Bilder, die bleiben.",
@@ -69,25 +70,26 @@ const sections = [
   {
     name: "ECHOES",
     poleLetter: "o",
-    eyebrow: "03 — SELECTED WORKS",
+    eyebrow: "04 — Präsenz",
     title: ["Echoes"],
     body: [
       "Songs und Spuren, die an",
       "verschiedenen Orten widerhallen."
+       "Folge Ihnen"
     ],
     image: ASSETS.archive
   },
   {
     name: "CONTACT",
     poleLetter: "u",
-    eyebrow: "04 — GET IN TOUCH",
+    eyebrow: "05 — GET IN TOUCH",
     title: ["Contact"],
     body: [
       "Für Anfragen und Zusammenarbeit.",
-      "Oder einfach für ein Gespräch."
+      "Oder einfach so."
     ],
     image: ASSETS.contact,
-    extra: ["camou.kontakt@gmail.com"]
+    extra: [""]
   }
 ];
 
@@ -775,17 +777,28 @@ window.addEventListener(
   { passive: true }
 );
 
+
 function sensorMode() {
+
+  // Ohne Aktivierung nur Kugelsteuerung
+  if (!sensorOptIn) {
+    return "KUGELSTEUERUNG";
+  }
+
+  // Kompasssensor hat Priorität
   if (fresh(headingLastAt)) {
     return "KOMPASS AKTIV";
   }
 
+  // Alternativ Bewegungssensor
   if (fresh(motionLastAt)) {
     return "BEWEGUNG AKTIV";
   }
 
+  // Keine aktuellen Sensordaten
   return "KUGELSTEUERUNG";
 }
+
 
 /* =========================================
    SENSORAKTIVIERUNG AUF DER KUGEL
@@ -892,11 +905,20 @@ function requestSensorAccess() {
 
   sensorOptIn = !sensorOptIn;
 
-  if (!sensorOptIn) {
-    sensorStatusText = "AUTOMATISCHE ERKENNUNG";
-    refreshEchoesTexture();
-    return;
-  }
+
+if (!sensorOptIn) {
+
+  // Aktuelle Nadelposition beibehalten
+  fallbackAngle = needleAngle;
+  targetNeedleAngle = needleAngle;
+
+  // Zur normalen Kugelsteuerung wechseln
+  sensorStatusText = "KUGELSTEUERUNG";
+
+  refreshEchoesTexture();
+  return;
+}
+
 
   if (!window.isSecureContext) {
     sensorOptIn = false;
