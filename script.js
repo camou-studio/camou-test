@@ -1662,7 +1662,7 @@ function drawOpenLabel(ctx, cx, ix, iy, iw, ih) {
   ctx.fillStyle = "#edf4e9";
 
   ctx.font =
-    "500 25px 'DM Mono', monospace";
+    "500 21px 'DM Mono', monospace";
 
   ctx.fillText(
     "ÖFFNEN  ↗",
@@ -1722,7 +1722,7 @@ function drawPanel(
   ctx.fillText(
     section.eyebrow,
     cx,
-    h * 0.24,
+    h * 0.305,
     contentW
   );
 
@@ -1735,7 +1735,7 @@ function drawPanel(
   // Einheitliche Schriftgrösse für alle Bereiche
   ctx.font = "300 58px Manrope, Arial";
 
-  const titleY = h * 0.31;
+  const titleY = h * 0.345;
 
   section.title.forEach((line, i) => {
     ctx.fillText(
