@@ -1709,13 +1709,15 @@ function drawPanel(
     h * 0.020
   );
 
-  /* Kategorie */
+
+  /* =========================================
+     KATEGORIE – DM MONO
+  ========================================= */
 
   ctx.textBaseline = "alphabetic";
   ctx.fillStyle = "rgba(232,239,226,.65)";
 
-  ctx.font =
-    "500 21px 'DM Mono', monospace";
+  ctx.font = "500 19px 'DM Mono', monospace";
 
   ctx.fillText(
     section.eyebrow,
@@ -1724,13 +1726,14 @@ function drawPanel(
     contentW
   );
 
-  /* Titel */
+  /* =========================================
+     TITEL – MANROPE
+  ========================================= */
 
   ctx.fillStyle = "#f0f2eb";
 
-  ctx.font = section.name === "MUSIC"
-    ? "300 45px Manrope, Arial"
-    : "300 58px Manrope, Arial";
+  // Einheitliche Schriftgrösse für alle Bereiche
+  ctx.font = "300 58px Manrope, Arial";
 
   const titleY = h * 0.31;
 
@@ -1743,24 +1746,32 @@ function drawPanel(
     );
   });
 
-  /* Beschreibung */
+  /* =========================================
+     BESCHREIBUNG – MANROPE
+  ========================================= */
 
+  // Abstand zwischen Überschrift und Beschreibung
   const bodyStart =
     titleY +
     (section.title.length - 1) * 76 +
-    100;
+    82;
 
   ctx.fillStyle = "rgba(235,239,230,.86)";
-  ctx.font = "300 22px Manrope, Arial";
 
+  // Etwas kräftigere und besser lesbare Schrift
+  ctx.font = "400 22px Manrope, Arial";
+
+  // Einheitlicher Zeilenabstand
   section.body.forEach((line, i) => {
     ctx.fillText(
       line,
       cx,
-      bodyStart + i * 43,
+      bodyStart + i * 40,
       contentW
     );
   });
+
+
 
   /* Zusatzinformationen */
 
@@ -1775,7 +1786,7 @@ function drawPanel(
         line,
         cx,
         bodyStart +
-          section.body.length * 43 +
+          section.body.length * 40 +
           35 +
           i * 39,
         contentW
@@ -1992,7 +2003,18 @@ function drawWrappedPanel(ctx, index, image) {
 ========================================= */
 
 async function createGlobeTexture() {
-  const images = await Promise.all(
+
+  // Schriftarten parallel zu den Bildern vorbereiten
+  const canvasFontsReady = document.fonts?.load
+    ? Promise.allSettled([
+        document.fonts.load("300 58px Manrope"),
+        document.fonts.load("400 22px Manrope"),
+        document.fonts.load('500 19px "DM Mono"'),
+        document.fonts.load('400 19px "DM Mono"')
+      ])
+    : Promise.resolve();
+
+   const images = await Promise.all(
     [
       ASSETS.home,
       ASSETS.music,
@@ -2008,6 +2030,10 @@ async function createGlobeTexture() {
 
   visualIndex = 0;
   echoesImage = images[3];
+   
+  // Vor dem Zeichnen sicherstellen, dass die
+  // angeforderten Schriftarten geladen wurden.
+  await canvasFontsReady;
 
   globeCanvas = document.createElement("canvas");
 
