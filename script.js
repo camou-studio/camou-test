@@ -1777,7 +1777,7 @@ function drawPanel(
   // Einheitliche Schriftgrösse für alle Bereiche
   ctx.font = "300 58px Manrope, Arial";
 
-  const titleY = h * 0.295;
+  const titleY = h * 0.335;
 
   section.title.forEach((line, i) => {
     ctx.fillText(
