@@ -219,7 +219,7 @@ const camouSun = new THREE.Sprite(
     map: camouSunTexture,
     transparent: true,
     depthWrite: false,
-    depthTest: false,
+    depthTest: true,
     toneMapped: false
   })
 );
@@ -245,7 +245,7 @@ const camouPlanet = new THREE.Sprite(
     map: camouPlanetTexture,
     transparent: true,
     depthWrite: false,
-    depthTest: false,
+    depthTest: true,
     toneMapped: false
   })
 );
@@ -641,13 +641,22 @@ const flow1 = Math.sin(
   Math.sin(v * Math.PI * 5) * 1.8
 );
 
+// Nahtlose organische Strömungen
+// Alle horizontalen Frequenzen sind periodisch.
+
+const flow1 = Math.sin(
+  u * Math.PI * 6 +
+  Math.sin(v * Math.PI * 4) * 1.8
+);
+
 const flow2 = Math.cos(
-  v * Math.PI * 7 -
-  Math.sin(u * Math.PI * 4) * 1.5
+  u * Math.PI * 4 +
+  Math.sin(v * Math.PI * 6) * 1.5
 );
 
 const flow3 = Math.sin(
-  (u + v) * Math.PI * 9
+  u * Math.PI * 8 +
+  Math.cos(v * Math.PI * 5)
 );
 
 const organic =
@@ -2022,7 +2031,9 @@ async function createGlobeTexture() {
 
   globeTexture.colorSpace = THREE.SRGBColorSpace;
   globeTexture.wrapS = THREE.RepeatWrapping;
-
+globeTexture.wrapT = THREE.ClampToEdgeWrapping;
+globeTexture.needsUpdate = true;
+   
   globeTexture.anisotropy =
     renderer.capabilities.getMaxAnisotropy();
 
