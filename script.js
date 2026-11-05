@@ -227,8 +227,15 @@ const camouSun = new THREE.Sprite(
   })
 );
 
-camouSun.position.set(8, 5, -25);
-camouSun.scale.set(7, 7, 1);
+// Sonne: eigene Position für Smartphone
+if (mobile) {
+  camouSun.position.set(3.6, 5.8, -25);
+  camouSun.scale.set(5.5, 5.5, 1);
+} else {
+  camouSun.position.set(8, 5, -25);
+  camouSun.scale.set(7, 7, 1);
+}
+
 camouSun.renderOrder = -10;
 
 camera.add(camouSun);
@@ -253,8 +260,15 @@ const camouPlanet = new THREE.Sprite(
   })
 );
 
-camouPlanet.position.set(-8, -4.5, -25);
-camouPlanet.scale.set(2.2, 2.2, 1);
+// Planet: eigene Position für Smartphone
+if (mobile) {
+  camouPlanet.position.set(-3.6, -5.5, -25);
+  camouPlanet.scale.set(2.6, 2.6, 1);
+} else {
+  camouPlanet.position.set(-8, -4.5, -25);
+  camouPlanet.scale.set(2.2, 2.2, 1);
+}
+
 camouPlanet.renderOrder = -9;
 
 camera.add(camouPlanet);
