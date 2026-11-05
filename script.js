@@ -134,7 +134,7 @@ for (const id of [
 }
 
 const scene = new THREE.Scene();
-scene.background = new THREE.Color("#101411");
+scene.background = new THREE.Color("#DCE6D8");
 
 const camera = new THREE.PerspectiveCamera(
   38,
@@ -167,17 +167,17 @@ renderer.toneMappingExposure = 1.1;
 
 container.appendChild(renderer.domElement);
 
-scene.add(new THREE.AmbientLight(0xddebd8, 1.15));
+scene.add(new THREE.AmbientLight(0xfff2d9, 1.15));
 
 const light = new THREE.DirectionalLight(
-  0xe3f0dc, 2.1
+  0xffe8bf, 2.1
 );
 
 light.position.set(-3, 4, 5);
 scene.add(light);
 
 const rim = new THREE.PointLight(
-  0x9bb99a, 24, 15
+  0xd6e8bc, 24, 15
 );
 
 rim.position.set(4, -1, -3);
@@ -544,13 +544,13 @@ function drawBackground(ctx, width, height) {
       const glow =
         Math.cos(u * Math.PI * 4 - v * 3.1);
 
-      const base = [22, 34, 26];
+const base = [181, 205, 176];
 
-      const target = [
-        26 + wave * 2,
-        39 + glow * 2.5,
-        30 + wave * 1.6
-      ];
+const target = [
+  211 + wave * 5,
+  225 + glow * 5,
+  199 + wave * 4
+];
 
       const color = base.map((value, i) =>
         lerp(value, target[i], pole)
@@ -3421,7 +3421,7 @@ paintPhoto = function(ctx, index, image) {
   }
   ctx.rotate(p.photoR);
 
-  ctx.fillStyle = "rgba(7,12,9,.92)";
+  ctx.fillStyle = "rgba(74,105,79,.90)";
   ctx.fillRect(-photoW / 2 - 7, -photoH / 2 - 7, photoW + 14, photoH + 14);
 
   ctx.save();
@@ -3446,7 +3446,7 @@ paintPhoto = function(ctx, index, image) {
     drawOpenLabel(ctx, 0, -photoW / 2, -photoH / 2, photoW, photoH);
   }
 
-  ctx.strokeStyle = "rgba(225,237,220,.52)";
+  ctx.strokeStyle = "rgba(247,238,213,.78)";
   ctx.lineWidth = 2;
   ctx.strokeRect(-photoW / 2, -photoH / 2, photoW, photoH);
   ctx.restore();
@@ -3497,7 +3497,7 @@ drawPanel = function(ctx, index, image) {
   /* Haupttitel */
 
   ctx.font = "300 58px Manrope, Arial";
-  ctx.fillStyle = "#f0f2eb";
+  ctx.fillStyle = "#294535";
 
 ctx.fillText(
   section.title[0],
@@ -3511,7 +3511,7 @@ ctx.fillText(
   ctx.font = "400 22px Manrope, Arial";
 
   ctx.fillStyle =
-    "rgba(236,242,232,.88)";
+    "rgba(41,69,53,.92)";
 
 if (side) {
 
