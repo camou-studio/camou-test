@@ -13,7 +13,7 @@ const CONFIG = {
   minZoom: 6,
   maxZoom: 17,
   dragSpeed: 0.0052,
-  friction: 0.94,
+  friction: 0.86,
   visualScale: 0.78
 };
 
@@ -2860,17 +2860,32 @@ stage.addEventListener(
       dt / 16, 2
     );
 
-    const mx =
-      dx * CONFIG.dragSpeed;
+// Kameraneigung bei manueller Drehung berücksichtigen
+const roll = camera.rotation.z;
 
-    const my =
-      dy * CONFIG.dragSpeed;
+const cosRoll = Math.cos(roll);
+const sinRoll = Math.sin(roll);
 
-    rotationY += mx;
-    rotationX += my;
+// Mausbewegung in die gedrehte Ansicht umrechnen
+const horizontal =
+  dx * cosRoll + dy * sinRoll;
 
-    velocityY = mx / factor;
-    velocityX = my / factor;
+const vertical =
+  dy * cosRoll - dx * sinRoll;
+
+// Etwas feinfühligere Steuerung
+const sensitivity = CONFIG.dragSpeed * 0.80;
+
+const mx = horizontal * sensitivity;
+const my = vertical * sensitivity;
+
+// Kugel bewegen
+rotationY += mx;
+rotationX += my;
+
+// Trägheit übernehmen
+velocityY = mx / factor;
+velocityX = my / factor;
 
     previousX = event.clientX;
     previousY = event.clientY;
