@@ -2836,11 +2836,7 @@ stage.addEventListener(
       y: event.clientY
     });
 
-    // Pinch Zoom.
-    if (pointers.size >= 2) {
-      const points = [
-        ...pointers.values()
-// Zwei-Finger-Geste: Zoom und intuitive Rotation
+    // Zwei-Finger-Geste: Zoom und intuitive Rotation
 if (pointers.size >= 2) {
   const points = [...pointers.values()];
 
@@ -2850,10 +2846,12 @@ if (pointers.size >= 2) {
     points[1]
   );
 
-  // Zoom wie bisher
+  // Zoom beibehalten
   if (pinchDistance > 0 && currentDistance > 0) {
     setZoom(
-      pinchZoom * (pinchDistance / currentDistance)
+      pinchZoom * (
+        pinchDistance / currentDistance
+      )
     );
   }
 
@@ -2868,13 +2866,12 @@ if (pointers.size >= 2) {
     currentAngle - pinchAngle
   );
 
-  // Intuitive Drehrichtung
+  // Richtige Drehrichtung
   camera.rotation.z += delta;
 
-  // Neuen Winkel für die nächste Bewegung speichern
+  // Winkel für nächste Bewegung speichern
   pinchAngle = currentAngle;
 
-  // Neue Ansicht sofort zeichnen
   sceneNeedsRender = true;
 
   return;
