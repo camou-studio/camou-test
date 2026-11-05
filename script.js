@@ -635,11 +635,6 @@ function drawBackground(ctx, width, height) {
 
       const glow =
         Math.cos(u * Math.PI * 4 - v * 3.1);
-// Organische Strömungen auf der CAMOU-Kugel
-const flow1 = Math.sin(
-  u * Math.PI * 6 +
-  Math.sin(v * Math.PI * 5) * 1.8
-);
 
 // Nahtlose organische Strömungen
 // Alle horizontalen Frequenzen sind periodisch.
