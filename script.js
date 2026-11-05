@@ -134,7 +134,7 @@ for (const id of [
 }
 
 const scene = new THREE.Scene();
-scene.background = new THREE.Color("#DCE6D8");
+scene.background = new THREE.Color("#A7B69A");
 
 const camera = new THREE.PerspectiveCamera(
   38,
@@ -170,7 +170,7 @@ container.appendChild(renderer.domElement);
 scene.add(new THREE.AmbientLight(0xfff2d9, 1.15));
 
 const light = new THREE.DirectionalLight(
-  0xffe8bf, 2.1
+  0xffd69b, 2.1
 );
 
 light.position.set(-3, 4, 5);
@@ -544,12 +544,12 @@ function drawBackground(ctx, width, height) {
       const glow =
         Math.cos(u * Math.PI * 4 - v * 3.1);
 
-const base = [181, 205, 176];
+const base = [105, 132, 101];
 
 const target = [
-  211 + wave * 5,
-  225 + glow * 5,
-  199 + wave * 4
+  172 + wave * 16,
+  179 + glow * 12,
+  137 + wave * 10
 ];
 
       const color = base.map((value, i) =>
