@@ -227,14 +227,9 @@ const camouSun = new THREE.Sprite(
   })
 );
 
-// Sonne: eigene Position für Smartphone
-if (mobile) {
-  camouSun.position.set(3.6, 5.8, -25);
-  camouSun.scale.set(5.5, 5.5, 1);
-} else {
-  camouSun.position.set(8, 5, -25);
-  camouSun.scale.set(7, 7, 1);
-}
+// Position wird abhängig vom Bildschirm berechnet
+camouSun.position.set(8, 5, -25);
+camouSun.scale.set(7, 7, 1);
 
 camouSun.renderOrder = -10;
 
@@ -260,19 +255,76 @@ const camouPlanet = new THREE.Sprite(
   })
 );
 
-// Planet: eigene Position für Smartphone
-if (mobile) {
-  camouPlanet.position.set(-3.6, -5.5, -25);
-  camouPlanet.scale.set(2.6, 2.6, 1);
-} else {
-  camouPlanet.position.set(-8, -4.5, -25);
-  camouPlanet.scale.set(2.2, 2.2, 1);
-}
+// Position wird abhängig vom Bildschirm berechnet
+camouPlanet.position.set(-8, -4.5, -25);
+camouPlanet.scale.set(2.2, 2.2, 1);
 
 camouPlanet.renderOrder = -9;
 
 camera.add(camouPlanet);
+/* =========================================
+   CAMOU COSMOS
+   RESPONSIVE HIMMELSKOERPER
+========================================= */
 
+function updateCosmosPositions() {
+
+  const portrait =
+    window.innerWidth <= 700 &&
+    window.innerHeight > window.innerWidth;
+
+  if (portrait) {
+
+    // Sichtbaren Kameraausschnitt in der
+    // Entfernung der Hintergrundobjekte berechnen.
+    const depth = 25;
+
+    const halfHeight =
+      Math.tan(
+        THREE.MathUtils.degToRad(camera.fov / 2)
+      ) * depth;
+
+    const halfWidth =
+      halfHeight * camera.aspect;
+
+    // Sonne rechts oben, ausserhalb der Kugel
+camouSun.position.set(
+  halfWidth * 0.65,
+  halfHeight * 0.94,
+  -depth
+);
+
+camouSun.scale.set(
+  halfWidth * 0.85,
+  halfWidth * 0.85,
+  1
+);
+
+// Planet links unten, ausserhalb der Kugel
+camouPlanet.position.set(
+  -halfWidth * 0.65,
+  -halfHeight * 0.94,
+  -depth
+);
+
+camouPlanet.scale.set(
+  halfWidth * 0.45,
+  halfWidth * 0.45,
+  1
+);
+
+  } else {
+
+    // Bisherige Desktop-Darstellung
+    camouSun.position.set(8, 5, -25);
+    camouSun.scale.set(7, 7, 1);
+
+    camouPlanet.position.set(-8, -4.5, -25);
+    camouPlanet.scale.set(2.2, 2.2, 1);
+  }
+
+  sceneNeedsRender = true;
+}
 /* ENDE CAMOU COSMOS */
 scene.add(
   new THREE.AmbientLight(0xb8d8e1, 1.15)
@@ -3307,6 +3359,7 @@ function resize() {
 
   camera.aspect = w / h;
   camera.updateProjectionMatrix();
+   updateCosmosPositions();
 
   renderer.setSize(w, h);
 
@@ -3321,7 +3374,8 @@ window.addEventListener(
   "resize",
   resize
 );
-
+// Cosmos beim ersten Laden positionieren
+updateCosmosPositions();
 setZoom(defaultZoom);
 updateIndicator();
 
