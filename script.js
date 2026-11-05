@@ -166,6 +166,9 @@ renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.1;
 
 container.appendChild(renderer.domElement);
+// Touch-Gesten an CAMOU übergeben
+renderer.domElement.style.touchAction = "none";
+stage.style.touchAction = "none";
 /* =========================================
    CAMOU COSMOS
    SONNE UND ENTFERNTER PLANET
@@ -452,6 +455,7 @@ let pointerStart = null;
 
 let pinchDistance = 0;
 let pinchZoom = currentZoom;
+let pinchAngle = 0;
 
 let globeCanvas = null;
 let globeContext = null;
@@ -2772,21 +2776,33 @@ stage.addEventListener(
 
       stage.classList.add("dragging");
       $("hint")?.classList.add("hidden");
-    } else if (pointers.size === 2) {
-      isDragging = false;
-      pointerStart = null;
+} else if (pointers.size === 2) {
+  isDragging = false;
+  pointerStart = null;
 
-      const points = [
-        ...pointers.values()
-      ];
+  const points = [...pointers.values()];
 
-      pinchDistance = distance(
-        points[0],
-        points[1]
-      );
+  // Abstand für Zoom speichern
+  pinchDistance = distance(
+    points[0],
+    points[1]
+  );
 
-      pinchZoom = currentZoom;
-    }
+  pinchZoom = currentZoom;
+
+  // Ausgangswinkel der beiden Finger
+  pinchAngle = Math.atan2(
+    points[1].y - points[0].y,
+    points[1].x - points[0].x
+  );
+
+  // Laufende Menüanimation beenden
+  menuAnimating = false;
+
+  // Ungewolltes Weiterdrehen verhindern
+  velocityX = 0;
+  velocityY = 0;
+}
   }
 );
 
@@ -2824,22 +2840,45 @@ stage.addEventListener(
     if (pointers.size >= 2) {
       const points = [
         ...pointers.values()
-      ];
+// Zwei-Finger-Geste: Zoom und intuitive Rotation
+if (pointers.size >= 2) {
+  const points = [...pointers.values()];
 
-      if (pinchDistance > 0) {
-        setZoom(
-          pinchZoom /
-          (
-            distance(
-              points[0],
-              points[1]
-            ) / pinchDistance
-          )
-        );
-      }
+  // Abstand zwischen den Fingern
+  const currentDistance = distance(
+    points[0],
+    points[1]
+  );
 
-      return;
-    }
+  // Zoom wie bisher
+  if (pinchDistance > 0 && currentDistance > 0) {
+    setZoom(
+      pinchZoom * (pinchDistance / currentDistance)
+    );
+  }
+
+  // Winkel zwischen den Fingern
+  const currentAngle = Math.atan2(
+    points[1].y - points[0].y,
+    points[1].x - points[0].x
+  );
+
+  // Winkeländerung berechnen
+  const delta = wrapAngle(
+    currentAngle - pinchAngle
+  );
+
+  // Intuitive Drehrichtung
+  camera.rotation.z += delta;
+
+  // Neuen Winkel für die nächste Bewegung speichern
+  pinchAngle = currentAngle;
+
+  // Neue Ansicht sofort zeichnen
+  sceneNeedsRender = true;
+
+  return;
+}
 
     if (!isDragging) return;
 
