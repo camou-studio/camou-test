@@ -134,7 +134,7 @@ for (const id of [
 }
 
 const scene = new THREE.Scene();
-scene.background = new THREE.Color("#A7B69A");
+scene.background = new THREE.Color("#091722");
 
 const camera = new THREE.PerspectiveCamera(
   38,
@@ -166,18 +166,110 @@ renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.1;
 
 container.appendChild(renderer.domElement);
+/* =========================================
+   CAMOU COSMOS
+   SONNE UND ENTFERNTER PLANET
+========================================= */
 
-scene.add(new THREE.AmbientLight(0xfff2d9, 1.15));
+// Hintergrundobjekte an der Kamera befestigen.
+// Dadurch bleiben sie beim Drehen der Kugel
+// im Hintergrund und beeinflussen keine Navigation.
+
+scene.add(camera);
+
+// Erzeugt eine runde, weich beleuchtete
+// Hintergrundgrafik als Three.js-Textur.
+function createCosmicTexture(colors) {
+  const canvas = document.createElement("canvas");
+  canvas.width = 256;
+  canvas.height = 256;
+
+  const ctx = canvas.getContext("2d");
+
+  const gradient = ctx.createRadialGradient(
+    128, 128, 0,
+    128, 128, 128
+  );
+
+  colors.forEach(([position, color]) => {
+    gradient.addColorStop(position, color);
+  });
+
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, 256, 256);
+
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+
+  return texture;
+}
+
+// Entfernte Sonne mit warmem Lichtschein
+const camouSunTexture = createCosmicTexture([
+  [0.00, "rgba(255,245,202,1)"],
+  [0.12, "rgba(255,218,145,1)"],
+  [0.25, "rgba(242,166,91,.95)"],
+  [0.40, "rgba(223,129,75,.45)"],
+  [0.65, "rgba(212,107,64,.12)"],
+  [1.00, "rgba(212,107,64,0)"]
+]);
+
+const camouSun = new THREE.Sprite(
+  new THREE.SpriteMaterial({
+    map: camouSunTexture,
+    transparent: true,
+    depthWrite: false,
+    depthTest: false,
+    toneMapped: false
+  })
+);
+
+camouSun.position.set(8, 5, -25);
+camouSun.scale.set(7, 7, 1);
+camouSun.renderOrder = -10;
+
+camera.add(camouSun);
+
+// Kleiner, entfernter Planet
+const camouPlanetTexture = createCosmicTexture([
+  [0.00, "rgba(206,178,151,1)"],
+  [0.35, "rgba(133,119,142,1)"],
+  [0.65, "rgba(75,79,111,1)"],
+  [0.88, "rgba(36,46,70,1)"],
+  [0.90, "rgba(36,46,70,0)"],
+  [1.00, "rgba(36,46,70,0)"]
+]);
+
+const camouPlanet = new THREE.Sprite(
+  new THREE.SpriteMaterial({
+    map: camouPlanetTexture,
+    transparent: true,
+    depthWrite: false,
+    depthTest: false,
+    toneMapped: false
+  })
+);
+
+camouPlanet.position.set(-8, -4.5, -25);
+camouPlanet.scale.set(2.2, 2.2, 1);
+camouPlanet.renderOrder = -9;
+
+camera.add(camouPlanet);
+
+/* ENDE CAMOU COSMOS */
+scene.add(
+  new THREE.AmbientLight(0xb8d8e1, 1.15)
+);
 
 const light = new THREE.DirectionalLight(
-  0xffd69b, 2.1
+  0xffe2b5, 2.1
 );
 
 light.position.set(-3, 4, 5);
 scene.add(light);
 
 const rim = new THREE.PointLight(
-  0xd6e8bc, 24, 15
+  0x63c9cf, 24, 15
 );
 
 rim.position.set(4, -1, -3);
@@ -543,13 +635,31 @@ function drawBackground(ctx, width, height) {
 
       const glow =
         Math.cos(u * Math.PI * 4 - v * 3.1);
+// Organische Strömungen auf der CAMOU-Kugel
+const flow1 = Math.sin(
+  u * Math.PI * 6 +
+  Math.sin(v * Math.PI * 5) * 1.8
+);
 
-const base = [105, 132, 101];
+const flow2 = Math.cos(
+  v * Math.PI * 7 -
+  Math.sin(u * Math.PI * 4) * 1.5
+);
+
+const flow3 = Math.sin(
+  (u + v) * Math.PI * 9
+);
+
+const organic =
+  flow1 * 0.45 +
+  flow2 * 0.35 +
+  flow3 * 0.20;
+const base = [17, 67, 89];
 
 const target = [
-  172 + wave * 16,
-  179 + glow * 12,
-  137 + wave * 10
+  32 + wave * 18 + organic * 24,
+  131 + glow * 22 + organic * 31,
+  145 + wave * 20 + organic * 38
 ];
 
       const color = base.map((value, i) =>
@@ -3421,7 +3531,7 @@ paintPhoto = function(ctx, index, image) {
   }
   ctx.rotate(p.photoR);
 
-  ctx.fillStyle = "rgba(74,105,79,.90)";
+  ctx.fillStyle = "rgba(8,23,31,.94)";
   ctx.fillRect(-photoW / 2 - 7, -photoH / 2 - 7, photoW + 14, photoH + 14);
 
   ctx.save();
@@ -3446,7 +3556,7 @@ paintPhoto = function(ctx, index, image) {
     drawOpenLabel(ctx, 0, -photoW / 2, -photoH / 2, photoW, photoH);
   }
 
-  ctx.strokeStyle = "rgba(247,238,213,.78)";
+  ctx.strokeStyle = "rgba(165,216,211,.65)";
   ctx.lineWidth = 2;
   ctx.strokeRect(-photoW / 2, -photoH / 2, photoW, photoH);
   ctx.restore();
@@ -3470,7 +3580,8 @@ drawPanel = function(ctx, index, image) {
   /* Kleine Bereichsbezeichnungen */
 
   if (CAMOU_V2_SHOW_LABELS) {
-    ctx.strokeStyle = "rgba(207,226,200,.30)";
+    ctx.fillStyle =
+  "rgba(224,237,232,.80)";
     ctx.lineWidth = 1.5;
 
     ctx.beginPath();
@@ -3497,7 +3608,7 @@ drawPanel = function(ctx, index, image) {
   /* Haupttitel */
 
   ctx.font = "300 58px Manrope, Arial";
-  ctx.fillStyle = "#294535";
+  ctx.fillStyle = "#F4F1E8";
 
 ctx.fillText(
   section.title[0],
@@ -3511,7 +3622,7 @@ ctx.fillText(
   ctx.font = "400 22px Manrope, Arial";
 
   ctx.fillStyle =
-    "rgba(41,69,53,.92)";
+  "rgba(244,241,232,.94)";
 
 if (side) {
 
