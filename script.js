@@ -1293,15 +1293,49 @@ function drawCompass(ctx, cx, cy) {
   ctx.arc(cx, cy, 174, 0, Math.PI * 2);
   ctx.fill();
 
-  ctx.strokeStyle = "rgba(230,242,224,.7)";
-  ctx.lineWidth = 2;
+
+  // Feiner Metallrand mit leicht wechselnder Helligkeit.
+  const rimMetal = ctx.createLinearGradient(
+    cx - 174, cy - 174,
+    cx + 174, cy + 174
+  );
+
+  rimMetal.addColorStop(
+    0, "rgba(142,177,151,.40)"
+  );
+
+  rimMetal.addColorStop(
+    0.32, "rgba(207,225,206,.72)"
+  );
+
+  rimMetal.addColorStop(
+    0.68, "rgba(101,143,117,.38)"
+  );
+
+  rimMetal.addColorStop(
+    1, "rgba(171,198,175,.58)"
+  );
+
+  ctx.strokeStyle = rimMetal;
+  ctx.lineWidth = 1.3;
   ctx.stroke();
 
-  ctx.strokeStyle = "rgba(230,242,224,.25)";
-  ctx.lineWidth = 1;
+  // Schmale dunkle Fuge zwischen Gehaeuse und Glas.
+  ctx.strokeStyle = "rgba(7,19,14,.72)";
+  ctx.lineWidth = 2;
+
+  ctx.beginPath();
+  ctx.arc(cx, cy, 169, 0, Math.PI * 2);
+  ctx.stroke();
+
+  // Zurueckhaltender innerer Rand.
+  ctx.strokeStyle = "rgba(160,192,166,.19)";
+  ctx.lineWidth = 0.8;
+
   ctx.beginPath();
   ctx.arc(cx, cy, 163, 0, Math.PI * 2);
   ctx.stroke();
+
 
   for (let i = 0; i < 120; i++) {
     const angle =
@@ -1356,11 +1390,28 @@ function drawCompass(ctx, cx, cy) {
     ctx.stroke();
   }
 
+
   ctx.save();
   ctx.translate(cx, cy);
   ctx.rotate(needleAngle);
 
-  ctx.fillStyle = "#ed4438";
+  // Sehr weicher Schatten unter der Nadel.
+  ctx.shadowColor = "rgba(0,0,0,.55)";
+  ctx.shadowBlur = 5;
+  ctx.shadowOffsetX = 2;
+  ctx.shadowOffsetY = 2;
+
+  // Rote Spitze mit dezenter seitlicher Schattierung.
+  const redMetal = ctx.createLinearGradient(
+    -12, 0, 12, 0
+  );
+
+  redMetal.addColorStop(0, "#a52b25");
+  redMetal.addColorStop(0.42, "#ed4438");
+  redMetal.addColorStop(1, "#ff6656");
+
+  ctx.fillStyle = redMetal;
+
   ctx.beginPath();
   ctx.moveTo(0, -112);
   ctx.lineTo(-12, 8);
@@ -1369,7 +1420,17 @@ function drawCompass(ctx, cx, cy) {
   ctx.closePath();
   ctx.fill();
 
-  ctx.fillStyle = "#e9eee5";
+  // Helle Spitze: warmes Metall statt flaches Weiss.
+  const paleMetal = ctx.createLinearGradient(
+    -12, 0, 12, 0
+  );
+
+  paleMetal.addColorStop(0, "#a6b7aa");
+  paleMetal.addColorStop(0.45, "#e9eee5");
+  paleMetal.addColorStop(1, "#fffdf0");
+
+  ctx.fillStyle = paleMetal;
+
   ctx.beginPath();
   ctx.moveTo(0, 112);
   ctx.lineTo(-12, -8);
@@ -1379,6 +1440,7 @@ function drawCompass(ctx, cx, cy) {
   ctx.fill();
 
   ctx.restore();
+
 
 
   // =========================================
