@@ -1380,6 +1380,88 @@ function drawCompass(ctx, cx, cy) {
 
   ctx.restore();
 
+
+  // =========================================
+  // GEWOELBTE GLASABDECKUNG
+  // =========================================
+
+  ctx.save();
+
+  // Spiegelungen nur innerhalb des Kompasses
+  ctx.beginPath();
+  ctx.arc(cx, cy, 169, 0, Math.PI * 2);
+  ctx.clip();
+
+  const glass = ctx.createLinearGradient(
+    cx - 140,
+    cy - 165,
+    cx + 135,
+    cy + 170
+  );
+
+  glass.addColorStop(
+    0,
+    "rgba(235,251,234,.17)"
+  );
+
+  glass.addColorStop(
+    0.28,
+    "rgba(198,235,213,.045)"
+  );
+
+  glass.addColorStop(
+    0.55,
+    "rgba(255,255,255,0)"
+  );
+
+  glass.addColorStop(
+    1,
+    "rgba(0,15,11,.23)"
+  );
+
+  ctx.fillStyle = glass;
+  ctx.fillRect(
+    cx - 170,
+    cy - 170,
+    340,
+    340
+  );
+
+  // Gebogener Lichtreflex auf dem Glas
+  ctx.save();
+
+  ctx.translate(cx, cy);
+  ctx.rotate(-0.32);
+
+  ctx.beginPath();
+  ctx.ellipse(
+    -32,
+    -105,
+    100,
+    29,
+    0,
+    Math.PI * 1.1,
+    Math.PI * 1.94
+  );
+
+  ctx.strokeStyle =
+    "rgba(235,255,240,.23)";
+
+  ctx.lineWidth = 12;
+
+  ctx.shadowColor =
+    "rgba(207,251,220,.22)";
+
+  ctx.shadowBlur = 18;
+  ctx.stroke();
+
+  ctx.restore();
+  ctx.restore();
+
+  // =========================================
+  // VIER GEWOELBTE SOCIAL-GLASKNOEPFE
+  // =========================================
+
   for (const item of SOCIAL) {
     const x =
       cx + Math.cos(item.angle) * compassRadius;
@@ -1387,16 +1469,92 @@ function drawCompass(ctx, cx, cy) {
     const y =
       cy + Math.sin(item.angle) * compassRadius;
 
-    ctx.fillStyle = "#142019";
+    ctx.save();
+
+    // Tiefe unterhalb des Glasknopfes
+    ctx.shadowColor = "rgba(0,0,0,.7)";
+    ctx.shadowBlur = 13;
+    ctx.shadowOffsetY = 4;
+
+    // Gewoelbtes, gruenliches Glas
+    const buttonGlass = ctx.createRadialGradient(
+      x - 10,
+      y - 12,
+      2,
+      x + 3,
+      y + 5,
+      39
+    );
+
+    buttonGlass.addColorStop(
+      0,
+      "#789686"
+    );
+
+    buttonGlass.addColorStop(
+      0.22,
+      "#3c6250"
+    );
+
+    buttonGlass.addColorStop(
+      0.58,
+      "#142c23"
+    );
+
+    buttonGlass.addColorStop(
+      1,
+      "#07140f"
+    );
+
+    ctx.fillStyle = buttonGlass;
+
     ctx.beginPath();
-    ctx.arc(x, y, 27, 0, Math.PI * 2);
+    ctx.arc(
+      x,
+      y,
+      31,
+      0,
+      Math.PI * 2
+    );
+
     ctx.fill();
 
-    ctx.strokeStyle = "rgba(234,245,230,.75)";
-    ctx.lineWidth = 1.5;
+    ctx.shadowBlur = 0;
+    ctx.shadowOffsetY = 0;
+
+    // Praegnanter heller Metall-/Glasring
+    ctx.strokeStyle =
+      "rgba(233,250,232,.95)";
+
+    ctx.lineWidth = 2.2;
     ctx.stroke();
 
-    socialIcon(ctx, item.name, x, y);
+    // Spiegelung auf der Oberseite
+    ctx.beginPath();
+    ctx.arc(
+      x,
+      y,
+      24,
+      Math.PI * 1.12,
+      Math.PI * 1.76
+    );
+
+    ctx.strokeStyle =
+      "rgba(255,255,255,.60)";
+
+    ctx.lineWidth = 2.4;
+    ctx.stroke();
+
+    // Bestehendes Spotify-/Apple-/
+    // YouTube-/Instagram-Symbol
+    socialIcon(
+      ctx,
+      item.name,
+      x,
+      y
+    );
+
+    ctx.restore();
   }
 
   ctx.fillStyle = "#15231a";
@@ -2745,7 +2903,7 @@ function handleGlobeClick(event) {
       return Math.hypot(
         dx - x,
         dy - y
-      ) < 32;
+      ) < 39;
     });
 
     if (link) {
