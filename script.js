@@ -806,12 +806,11 @@ function drawBackground(ctx, width, height) {
             (angle - reach) / 1.05
           );
 
-greenInfluence =
-  1 -
-  (1 - greenInfluence) *
-  (1 - influence);
 
-        );
+        greenInfluence =
+          1 -
+          (1 - greenInfluence) *
+          (1 - influence);
       }
 
       // Weicher, grossflaechiger Uebergang
