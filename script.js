@@ -3827,8 +3827,6 @@ drawPanel = function(ctx, index, image) {
 
   ctx.save();
 
-  camouDrawOrganicZone(ctx, index);
-
   ctx.textAlign = "center";
   ctx.textBaseline = "alphabetic";
 
