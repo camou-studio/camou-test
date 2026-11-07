@@ -803,12 +803,14 @@ function drawBackground(ctx, width, height) {
 
         const influence =
           1 - smooth(
-            (angle - reach) / 0.67
+            (angle - reach) / 1.05
           );
 
-        greenInfluence = Math.max(
-          greenInfluence,
-          influence
+greenInfluence =
+  1 -
+  (1 - greenInfluence) *
+  (1 - influence);
+
         );
       }
 
