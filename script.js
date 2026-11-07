@@ -1427,35 +1427,6 @@ function drawCompass(ctx, cx, cy) {
     340
   );
 
-  // Gebogener Lichtreflex auf dem Glas
-  ctx.save();
-
-  ctx.translate(cx, cy);
-  ctx.rotate(-0.32);
-
-  ctx.beginPath();
-  ctx.ellipse(
-    -32,
-    -105,
-    100,
-    29,
-    0,
-    Math.PI * 1.1,
-    Math.PI * 1.94
-  );
-
-  ctx.strokeStyle =
-    "rgba(235,255,240,.23)";
-
-  ctx.lineWidth = 12;
-
-  ctx.shadowColor =
-    "rgba(207,251,220,.22)";
-
-  ctx.shadowBlur = 18;
-  ctx.stroke();
-
-  ctx.restore();
   ctx.restore();
 
   // =========================================
@@ -1523,11 +1494,13 @@ function drawCompass(ctx, cx, cy) {
     ctx.shadowOffsetY = 0;
 
     // Praegnanter heller Metall-/Glasring
-    ctx.strokeStyle =
-      "rgba(233,250,232,.95)";
 
-    ctx.lineWidth = 2.2;
-    ctx.stroke();
+ctx.strokeStyle =
+  "rgba(166,204,178,.58)";
+
+ctx.lineWidth = 1.2;
+ctx.stroke();
+
 
     // Spiegelung auf der Oberseite
     ctx.beginPath();
@@ -1539,11 +1512,11 @@ function drawCompass(ctx, cx, cy) {
       Math.PI * 1.76
     );
 
-    ctx.strokeStyle =
-      "rgba(255,255,255,.60)";
+ctx.strokeStyle =
+  "rgba(205,233,207,.22)";
 
-    ctx.lineWidth = 2.4;
-    ctx.stroke();
+ctx.lineWidth = 1.1;
+ctx.stroke();
 
     // Bestehendes Spotify-/Apple-/
     // YouTube-/Instagram-Symbol
