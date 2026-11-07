@@ -235,15 +235,151 @@ camouSun.renderOrder = -10;
 
 camera.add(camouSun);
 
-// Kleiner, entfernter Planet
-const camouPlanetTexture = createCosmicTexture([
-  [0.00, "rgba(206,178,151,1)"],
-  [0.35, "rgba(133,119,142,1)"],
-  [0.65, "rgba(75,79,111,1)"],
-  [0.88, "rgba(36,46,70,1)"],
-  [0.90, "rgba(36,46,70,0)"],
-  [1.00, "rgba(36,46,70,0)"]
-]);
+
+/* =========================================
+   CAMOU – MINERALISCHER PLANET
+========================================= */
+
+function createRockyPlanetTexture() {
+  const size = 256;
+
+  const canvas = document.createElement("canvas");
+  canvas.width = size;
+  canvas.height = size;
+
+  const ctx = canvas.getContext("2d");
+  const image = ctx.createImageData(size, size);
+
+  // Reproduzierbare, natuerliche Oberflaechenstruktur
+  const hash = (x, y) => {
+    let n =
+      Math.imul(x, 374761393) +
+      Math.imul(y, 668265263);
+
+    n = Math.imul(n ^ (n >>> 13), 1274126177);
+
+    return ((n ^ (n >>> 16)) >>> 0) / 4294967295;
+  };
+
+  const noise = (x, y) => {
+    const ix = Math.floor(x);
+    const iy = Math.floor(y);
+
+    const fx = x - ix;
+    const fy = y - iy;
+
+    const sx = fx * fx * (3 - 2 * fx);
+    const sy = fy * fy * (3 - 2 * fy);
+
+    const a =
+      hash(ix, iy) * (1 - sx) +
+      hash(ix + 1, iy) * sx;
+
+    const b =
+      hash(ix, iy + 1) * (1 - sx) +
+      hash(ix + 1, iy + 1) * sx;
+
+    return a * (1 - sy) + b * sy;
+  };
+
+  // Lichteinfall von links oben
+  const lx = -0.48;
+  const ly = 0.58;
+  const lz = Math.sqrt(1 - lx * lx - ly * ly);
+
+  for (let y = 0; y < size; y++) {
+    for (let x = 0; x < size; x++) {
+      const nx =
+        (x + 0.5 - size / 2) / (size * 0.445);
+
+      const ny =
+        (size / 2 - y - 0.5) / (size * 0.445);
+
+      const r2 = nx * nx + ny * ny;
+      const i = (y * size + x) * 4;
+
+      if (r2 >= 1) continue;
+
+      const nz = Math.sqrt(1 - r2);
+
+      const light = Math.max(
+        0,
+        nx * lx + ny * ly + nz * lz
+      );
+
+      const shade = 0.18 + 0.82 * light;
+
+      // Unterschiedlich grosse Gesteinsstrukturen
+      const warp =
+        noise(nx * 3.1 + 13, ny * 3.1 + 7) - 0.5;
+
+      const u = nx + warp * 0.17;
+      const v = ny - warp * 0.13;
+
+      const large = noise(
+        u * 5.2 + 27,
+        v * 5.2 + 11
+      );
+
+      const medium = noise(
+        u * 13.7 + 5,
+        v * 13.7 + 19
+      );
+
+      const fine = noise(
+        u * 31.3 + 21,
+        v * 31.3 + 31
+      );
+
+      const mineral =
+        0.58 * large +
+        0.30 * medium +
+        0.12 * fine;
+
+      const relief = (mineral - 0.5) * 43;
+
+      // Gedämpftes Schieferblau und Lavendelgrau
+      const color = [
+        106 + relief + (medium - 0.5) * 11,
+        109 + relief * 0.88,
+        133 + relief * 1.12 + (large - 0.5) * 12
+      ];
+
+      const vignette =
+        1 - 0.17 * Math.pow(Math.sqrt(r2), 3);
+
+      for (let k = 0; k < 3; k++) {
+        image.data[i + k] = Math.max(
+          0,
+          Math.min(
+            255,
+            Math.round(
+              color[k] * shade * vignette
+            )
+          )
+        );
+      }
+
+      // Weicher Kugelrand, kein quadratischer Rand
+      const edge = Math.min(
+        1,
+        (1 - Math.sqrt(r2)) * 110
+      );
+
+      image.data[i + 3] =
+        Math.round(255 * edge);
+    }
+  }
+
+  ctx.putImageData(image, 0, 0);
+
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+
+  return texture;
+}
+
+const camouPlanetTexture = createRockyPlanetTexture();
 
 const camouPlanet = new THREE.Sprite(
   new THREE.SpriteMaterial({
