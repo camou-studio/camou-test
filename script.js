@@ -3699,6 +3699,64 @@ drawPanel = function(ctx, index, image) {
 
   ctx.save();
 
+  /* =========================================
+     LOKALE FARBZONEN
+     NUR VISUALS UND ECHOES
+  ========================================= */
+
+  if (index === 2 || index === 3) {
+
+    const gradient = ctx.createRadialGradient(
+      0, -10, 65,
+      0, -10, 365
+    );
+
+    if (index === 2) {
+
+      // VISUALS: dunkles Moosgruen
+      gradient.addColorStop(
+        0, "rgba(12,30,20,0.94)"
+      );
+
+      gradient.addColorStop(
+        0.48, "rgba(25,59,39,0.83)"
+      );
+
+      gradient.addColorStop(
+        0.78, "rgba(22,62,43,0.35)"
+      );
+
+    } else {
+
+      // ECHOES: tiefes Waldgruen
+      gradient.addColorStop(
+        0, "rgba(8,26,20,0.96)"
+      );
+
+      gradient.addColorStop(
+        0.48, "rgba(15,54,38,0.85)"
+      );
+
+      gradient.addColorStop(
+        0.78, "rgba(17,62,43,0.36)"
+      );
+    }
+
+    // Vollstaendig transparenter Rand
+    gradient.addColorStop(
+      1, "rgba(15,48,33,0)"
+    );
+
+    ctx.fillStyle = gradient;
+
+    ctx.beginPath();
+    ctx.arc(
+      0, -10, 365,
+      0, Math.PI * 2
+    );
+    ctx.fill();
+  }
+
   ctx.textAlign = "center";
   ctx.textBaseline = "alphabetic";
 
