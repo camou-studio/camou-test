@@ -3688,8 +3688,136 @@ paintPhoto = function(ctx, index, image) {
 };
 
 /* =========================================
-   TEXTE UND INHALTE
+   CAMOU – ORGANISCHE TARNFARBZONEN
+   NUR VISUALS UND ECHOES
 ========================================= */
+
+const camouOrganicZones = new Map();
+
+function camouDrawOrganicZone(ctx, index) {
+  if (index !== 2 && index !== 3) return;
+
+  // Muster einmal erzeugen und zwischenspeichern
+  if (!camouOrganicZones.has(index)) {
+    const canvas = document.createElement("canvas");
+    canvas.width = 320;
+    canvas.height = 256;
+
+    const c = canvas.getContext("2d");
+    const image = c.createImageData(
+      canvas.width,
+      canvas.height
+    );
+
+    const data = image.data;
+    const seed = index === 2 ? 0.4 : 2.6;
+
+    const fade = value => {
+      const t = Math.max(0, Math.min(1, value));
+      return t * t * (3 - 2 * t);
+    };
+
+    for (let y = 0; y < canvas.height; y++) {
+      const v = 2 * y / (canvas.height - 1) - 1;
+
+      for (let x = 0; x < canvas.width; x++) {
+        const u = 2 * x / (canvas.width - 1) - 1;
+
+        // Ueberlagerte organische Strukturen
+        const wave1 = Math.sin(
+          u * 5.7 + v * 3.1 + seed
+        );
+
+        const wave2 = Math.cos(
+          u * 10.2 - v * 6.3 - seed
+        );
+
+        const wave3 = Math.sin(
+          u * 15.1 + v * 12.4 + 2 * seed
+        );
+
+        const drift =
+          0.5 * wave1 +
+          0.3 * wave2 +
+          0.2 * wave3;
+
+        // Asymmetrische Verformung
+        const warpedX =
+          u + 0.16 * Math.sin(v * 4.1 + seed);
+
+        const warpedY =
+          v + 0.13 * Math.cos(u * 4.5 - seed);
+
+        const distance = Math.hypot(
+          warpedX * 0.90,
+          warpedY * 0.95
+        );
+
+        const angle = Math.atan2(
+          warpedY,
+          warpedX
+        );
+
+        // Unregelmaessige Tarnkonturen
+        const perimeter =
+          1.05 +
+          0.15 * Math.sin(angle * 3 + seed) +
+          0.12 * Math.cos(angle * 6 - seed) +
+          0.13 * drift;
+
+        const irregular = fade(
+          (perimeter - distance + 0.20) / 0.48
+        );
+
+        // Weicher Uebergang zur Kugeltextur
+        const edge =
+          fade((1 - Math.abs(u)) / 0.22) *
+          fade((1 - Math.abs(v)) / 0.22);
+
+        const alpha =
+          irregular *
+          edge *
+          (0.80 + 0.12 * drift);
+
+        // Moos- und Waldgruentoene
+        const moss = fade(
+          (drift + 0.50) / 1.1
+        );
+
+        const i =
+          (y * canvas.width + x) * 4;
+
+        data[i] = Math.round(
+          11 + 17 * moss
+        );
+
+        data[i + 1] = Math.round(
+          29 + 29 * moss
+        );
+
+        data[i + 2] = Math.round(
+          22 + 13 * moss
+        );
+
+        data[i + 3] = Math.round(
+          255 * Math.max(0, alpha)
+        );
+      }
+    }
+
+    c.putImageData(image, 0, 0);
+    camouOrganicZones.set(index, canvas);
+  }
+
+  // Farbzone hinter dem Bereich zeichnen
+  ctx.drawImage(
+    camouOrganicZones.get(index),
+    -CAMOU_V2_W / 2,
+    -CAMOU_V2_H / 2,
+    CAMOU_V2_W,
+    CAMOU_V2_H
+  );
+}
 
 drawPanel = function(ctx, index, image) {
   const p = PLACES[index];
@@ -3699,68 +3827,15 @@ drawPanel = function(ctx, index, image) {
 
   ctx.save();
 
-  /* =========================================
-     LOKALE FARBZONEN
-     NUR VISUALS UND ECHOES
-  ========================================= */
-
-  if (index === 2 || index === 3) {
-
-    const gradient = ctx.createRadialGradient(
-      0, -10, 65,
-      0, -10, 365
-    );
-
-    if (index === 2) {
-
-      // VISUALS: dunkles Moosgruen
-      gradient.addColorStop(
-        0, "rgba(12,30,20,0.94)"
-      );
-
-      gradient.addColorStop(
-        0.48, "rgba(25,59,39,0.83)"
-      );
-
-      gradient.addColorStop(
-        0.78, "rgba(22,62,43,0.35)"
-      );
-
-    } else {
-
-      // ECHOES: tiefes Waldgruen
-      gradient.addColorStop(
-        0, "rgba(8,26,20,0.96)"
-      );
-
-      gradient.addColorStop(
-        0.48, "rgba(15,54,38,0.85)"
-      );
-
-      gradient.addColorStop(
-        0.78, "rgba(17,62,43,0.36)"
-      );
-    }
-
-    // Vollstaendig transparenter Rand
-    gradient.addColorStop(
-      1, "rgba(15,48,33,0)"
-    );
-
-    ctx.fillStyle = gradient;
-
-    ctx.beginPath();
-    ctx.arc(
-      0, -10, 365,
-      0, Math.PI * 2
-    );
-    ctx.fill();
-  }
+  camouDrawOrganicZone(ctx, index);
 
   ctx.textAlign = "center";
   ctx.textBaseline = "alphabetic";
 
-  /* Kleine Bereichsbezeichnungen */
+   /* Kleine Bereichsbezeichnungen */
+/* =========================================
+   TEXTE UND INHALTE
+========================================= */
 
   if (CAMOU_V2_SHOW_LABELS) {
     ctx.fillStyle =
