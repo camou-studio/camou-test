@@ -307,7 +307,7 @@ function createRockyPlanetTexture() {
         nx * lx + ny * ly + nz * lz
       );
 
-      const shade = 0.18 + 0.82 * light;
+      const shade = 0.28 + 0.72 * light;
 
       // Unterschiedlich grosse Gesteinsstrukturen
       const warp =
@@ -345,9 +345,22 @@ function createRockyPlanetTexture() {
         133 + relief * 1.12 + (large - 0.5) * 12
       ];
 
-      const vignette =
-        1 - 0.17 * Math.pow(Math.sqrt(r2), 3);
 
+
+      const radius = Math.sqrt(r2);
+
+      // Dezentes Streulicht am oberen linken Planetenrand
+      const rimLight =
+        Math.pow(1 - nz, 5) *
+        Math.max(0, nx * -0.55 + ny * 0.80) *
+        0.16;
+
+      const vignette =
+        1 -
+        0.12 * Math.pow(radius, 3) +
+        rimLight;
+
+      // Beleuchtung auf die drei Farbkanäle anwenden
       for (let k = 0; k < 3; k++) {
         image.data[i + k] = Math.max(
           0,
@@ -359,7 +372,6 @@ function createRockyPlanetTexture() {
           )
         );
       }
-
       // Weicher Kugelrand, kein quadratischer Rand
       const edge = Math.min(
         1,
