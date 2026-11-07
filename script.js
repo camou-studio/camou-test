@@ -678,21 +678,33 @@ function playButton(ctx, x, y) {
    ORGANISCHER HINTERGRUND
 ========================================= */
 
+
 function drawBackground(ctx, width, height) {
   const small = document.createElement("canvas");
-
   small.width = 512;
   small.height = 256;
 
   const g = small.getContext("2d");
   const image = g.createImageData(512, 256);
 
+  // Positionen von VISUALS und ECHOES auf der Kugel
+  const centers = [PLACES[2], PLACES[3]].map(p => ({
+    lat: p.lat * RAD,
+    lon: p.lon * RAD
+  }));
+
   for (let y = 0; y < 256; y++) {
     const v = y / 255;
 
+    const lat = (0.5 - v) * Math.PI;
+    const sinLat = Math.sin(lat);
+    const cosLat = Math.cos(lat);
+
     for (let x = 0; x < 512; x++) {
       const u = x / 512;
+      const lon = (u - 0.25) * Math.PI * 2;
 
+      // Bisherige Grundfarben erhalten
       const pole = smooth(
         Math.min(
           1,
@@ -700,41 +712,42 @@ function drawBackground(ctx, width, height) {
         )
       );
 
-      const wave =
-        Math.sin(u * Math.PI * 2 + v * 2.2);
+      const wave = Math.sin(
+        u * Math.PI * 2 + v * 2.2
+      );
 
-      const glow =
-        Math.cos(u * Math.PI * 4 - v * 3.1);
+      const glow = Math.cos(
+        u * Math.PI * 4 - v * 3.1
+      );
 
-// Nahtlose organische Strömungen
-// Alle horizontalen Frequenzen sind periodisch.
+      // Bestehende organische Stroemungen
+      const flow1 = Math.sin(
+        u * Math.PI * 6 +
+        Math.sin(v * Math.PI * 4) * 1.8
+      );
 
-const flow1 = Math.sin(
-  u * Math.PI * 6 +
-  Math.sin(v * Math.PI * 4) * 1.8
-);
+      const flow2 = Math.cos(
+        u * Math.PI * 4 +
+        Math.sin(v * Math.PI * 6) * 1.5
+      );
 
-const flow2 = Math.cos(
-  u * Math.PI * 4 +
-  Math.sin(v * Math.PI * 6) * 1.5
-);
+      const flow3 = Math.sin(
+        u * Math.PI * 8 +
+        Math.cos(v * Math.PI * 5)
+      );
 
-const flow3 = Math.sin(
-  u * Math.PI * 8 +
-  Math.cos(v * Math.PI * 5)
-);
+      const organic =
+        flow1 * 0.45 +
+        flow2 * 0.35 +
+        flow3 * 0.20;
 
-const organic =
-  flow1 * 0.45 +
-  flow2 * 0.35 +
-  flow3 * 0.20;
-const base = [17, 67, 89];
+      const base = [17, 67, 89];
 
-const target = [
-  32 + wave * 18 + organic * 24,
-  131 + glow * 22 + organic * 31,
-  145 + wave * 20 + organic * 38
-];
+      const target = [
+        32 + wave * 18 + organic * 24,
+        131 + glow * 22 + organic * 31,
+        145 + wave * 20 + organic * 38
+      ];
 
       const color = base.map((value, i) =>
         lerp(value, target[i], pole)
@@ -753,11 +766,78 @@ const target = [
           Math.pow(Math.abs(v - 0.5) * 2, 2)
         );
 
+      // Grossflaechige, unregelmaessige Farbstruktur
+      const marbling =
+        Math.sin(
+          u * Math.PI * 8 +
+          Math.sin(v * Math.PI * 4) * 1.4
+        ) * 0.47 +
+
+        Math.cos(
+          u * Math.PI * 12 -
+          v * Math.PI * 5
+        ) * 0.30 +
+
+        Math.sin(
+          v * Math.PI * 7 +
+          Math.cos(u * Math.PI * 6)
+        ) * 0.23;
+
+      // Gruene Farbanteile um VISUALS und ECHOES
+      let greenInfluence = 0;
+
+      for (const center of centers) {
+        const dot = clamp(
+          sinLat * Math.sin(center.lat) +
+          cosLat *
+          Math.cos(center.lat) *
+          Math.cos(lon - center.lon),
+          -1,
+          1
+        );
+
+        const angle = Math.acos(dot);
+
+        const reach =
+          0.34 + 0.10 * marbling;
+
+        const influence =
+          1 - smooth(
+            (angle - reach) / 0.67
+          );
+
+        greenInfluence = Math.max(
+          greenInfluence,
+          influence
+        );
+      }
+
+      // Weicher, grossflaechiger Uebergang
+      const mix = clamp(
+        greenInfluence *
+        (0.66 + 0.09 * organic),
+        0,
+        0.78
+      );
+
+      const forest = [
+        12 + marbling * 4,
+        48 + marbling * 10,
+        34 + marbling * 6
+      ];
+
       const j = (y * 512 + x) * 4;
 
       for (let k = 0; k < 3; k++) {
-        image.data[j + k] =
-          color[k] * lighting;
+        image.data[j + k] = clamp(
+          lerp(
+            color[k],
+            forest[k],
+            mix
+          ) * lighting,
+          0,
+          255
+        );
       }
 
       image.data[j + 3] = 255;
@@ -770,7 +850,11 @@ const target = [
   ctx.imageSmoothingQuality = "high";
 
   ctx.drawImage(
-    small, 0, 0, width, height
+    small,
+    0,
+    0,
+    width,
+    height
   );
 }
 
