@@ -405,48 +405,16 @@ camouPlanet.scale.set(2.2, 2.2, 1);
 camouPlanet.renderOrder = -9;
 
 camera.add(camouPlanet);
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-
-  link.href = url;
-  link.download = "camou-rocky-planet.png";
-  link.click();
-
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
-}, "image/png");
-
-const camouPlanet = new THREE.Sprite(
-  new THREE.SpriteMaterial({
-    map: camouPlanetTexture,
-    transparent: true,
-    depthWrite: false,
-    depthTest: true,
-    toneMapped: false
-  })
-);
-
-// Position wird abhängig vom Bildschirm berechnet
-camouPlanet.position.set(-8, -4.5, -25);
-camouPlanet.scale.set(2.2, 2.2, 1);
-
-camouPlanet.renderOrder = -9;
-
-camera.add(camouPlanet);
 /* =========================================
    CAMOU COSMOS
    RESPONSIVE HIMMELSKOERPER
 ========================================= */
-
 function updateCosmosPositions() {
-
   const portrait =
     window.innerWidth <= 700 &&
     window.innerHeight > window.innerWidth;
 
   if (portrait) {
-
-    // Sichtbaren Kameraausschnitt in der
-    // Entfernung der Hintergrundobjekte berechnen.
     const depth = 25;
 
     const halfHeight =
@@ -457,35 +425,34 @@ function updateCosmosPositions() {
     const halfWidth =
       halfHeight * camera.aspect;
 
-    // Sonne rechts oben, ausserhalb der Kugel
-camouSun.position.set(
-  halfWidth * 0.65,
-  halfHeight * 0.94,
-  -depth
-);
+    // Sonne rechts oben
+    camouSun.position.set(
+      halfWidth * 0.65,
+      halfHeight * 0.94,
+      -depth
+    );
 
-camouSun.scale.set(
-  halfWidth * 0.85,
-  halfWidth * 0.85,
-  1
-);
+    camouSun.scale.set(
+      halfWidth * 0.85,
+      halfWidth * 0.85,
+      1
+    );
 
-// Planet links unten, ausserhalb der Kugel
-camouPlanet.position.set(
-  -halfWidth * 0.65,
-  -halfHeight * 0.94,
-  -depth
-);
+    // Planet links unten
+    camouPlanet.position.set(
+      -halfWidth * 0.65,
+      -halfHeight * 0.94,
+      -depth
+    );
 
-camouPlanet.scale.set(
-  halfWidth * 0.45,
-  halfWidth * 0.45,
-  1
-);
+    camouPlanet.scale.set(
+      halfWidth * 0.45,
+      halfWidth * 0.45,
+      1
+    );
 
   } else {
-
-    // Bisherige Desktop-Darstellung
+    // Desktop-Darstellung
     camouSun.position.set(8, 5, -25);
     camouSun.scale.set(7, 7, 1);
 
