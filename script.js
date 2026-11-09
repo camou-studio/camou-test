@@ -243,6 +243,7 @@ camera.add(camouSun);
    CAMOU – MINERALISCHER PLANET
 ========================================= */
 
+
 function createRockyPlanetTexture() {
   const size = 256;
 
@@ -252,32 +253,26 @@ function createRockyPlanetTexture() {
 
   const ctx = canvas.getContext("2d");
   const image = ctx.createImageData(size, size);
+  const data = image.data;
 
-  // Reproduzierbare, natuerliche Oberflaechenstruktur
+  // Der urspruengliche reproduzierbare Rauschalgorithmus.
   const hash = (x, y) => {
     let n =
-      Math.imul(x, 374761393) +
-      Math.imul(y, 668265263);
-
+      Math.imul(x, 374761393) + Math.imul(y, 668265263);
     n = Math.imul(n ^ (n >>> 13), 1274126177);
-
     return ((n ^ (n >>> 16)) >>> 0) / 4294967295;
   };
 
   const noise = (x, y) => {
     const ix = Math.floor(x);
     const iy = Math.floor(y);
-
     const fx = x - ix;
     const fy = y - iy;
-
     const sx = fx * fx * (3 - 2 * fx);
     const sy = fy * fy * (3 - 2 * fy);
 
     const a =
-      hash(ix, iy) * (1 - sx) +
-      hash(ix + 1, iy) * sx;
-
+      hash(ix, iy) * (1 - sx) + hash(ix + 1, iy) * sx;
     const b =
       hash(ix, iy + 1) * (1 - sx) +
       hash(ix + 1, iy + 1) * sx;
@@ -285,112 +280,91 @@ function createRockyPlanetTexture() {
     return a * (1 - sy) + b * sy;
   };
 
-  // Lichteinfall von links oben
   const lx = -0.48;
   const ly = 0.58;
   const lz = Math.sqrt(1 - lx * lx - ly * ly);
 
+  // Ortskoordinaten einmal je Spalte beziehungsweise Zeile.
+  const coordsX = new Float64Array(size);
+  const coordsY = new Float64Array(size);
+  for (let x = 0; x < size; x++) {
+    coordsX[x] = (x + 0.5 - size / 2) / (size * 0.445);
+  }
   for (let y = 0; y < size; y++) {
+    coordsY[y] = (size / 2 - y - 0.5) / (size * 0.445);
+  }
+
+  for (let y = 0; y < size; y++) {
+    const ny = coordsY[y];
+
     for (let x = 0; x < size; x++) {
-      const nx =
-        (x + 0.5 - size / 2) / (size * 0.445);
-
-      const ny =
-        (size / 2 - y - 0.5) / (size * 0.445);
-
+      const nx = coordsX[x];
       const r2 = nx * nx + ny * ny;
       const i = (y * size + x) * 4;
 
       if (r2 >= 1) continue;
 
       const nz = Math.sqrt(1 - r2);
-
-      const light = Math.max(
-        0,
-        nx * lx + ny * ly + nz * lz
-      );
-
+      const light = Math.max(0, nx * lx + ny * ly + nz * lz);
       const shade = 0.28 + 0.72 * light;
 
-      // Unterschiedlich grosse Gesteinsstrukturen
-      const warp =
-        noise(nx * 3.1 + 13, ny * 3.1 + 7) - 0.5;
-
+      const warp = noise(nx * 3.1 + 13, ny * 3.1 + 7) - 0.5;
       const u = nx + warp * 0.17;
       const v = ny - warp * 0.13;
 
-      const large = noise(
-        u * 5.2 + 27,
-        v * 5.2 + 11
-      );
-
-      const medium = noise(
-        u * 13.7 + 5,
-        v * 13.7 + 19
-      );
-
-      const fine = noise(
-        u * 31.3 + 21,
-        v * 31.3 + 31
-      );
+      const large = noise(u * 5.2 + 27, v * 5.2 + 11);
+      const medium = noise(u * 13.7 + 5, v * 13.7 + 19);
+      const fine = noise(u * 31.3 + 21, v * 31.3 + 31);
 
       const mineral =
-        0.58 * large +
-        0.30 * medium +
-        0.12 * fine;
-
+        0.58 * large + 0.30 * medium + 0.12 * fine;
       const relief = (mineral - 0.5) * 43;
 
-      // Gedämpftes Schieferblau und Lavendelgrau
-      const color = [
-        106 + relief + (medium - 0.5) * 11,
-        109 + relief * 0.88,
-        133 + relief * 1.12 + (large - 0.5) * 12
-      ];
-
-
-
       const radius = Math.sqrt(r2);
-
-      // Dezentes Streulicht am oberen linken Planetenrand
       const rimLight =
         Math.pow(1 - nz, 5) *
-        Math.max(0, nx * -0.55 + ny * 0.80) *
-        0.16;
-
+        Math.max(0, nx * -0.55 + ny * 0.80) * 0.16;
       const vignette =
-        1 -
-        0.12 * Math.pow(radius, 3) +
-        rimLight;
+        1 - 0.12 * Math.pow(radius, 3) + rimLight;
 
-      // Beleuchtung auf die drei Farbkanäle anwenden
-      for (let k = 0; k < 3; k++) {
-        image.data[i + k] = Math.max(
-          0,
-          Math.min(
-            255,
-            Math.round(
-              color[k] * shade * vignette
-            )
+      data[i] = Math.max(
+        0,
+        Math.min(
+          255,
+          Math.round(
+            (106 + relief + (medium - 0.5) * 11) *
+            shade * vignette
           )
-        );
-      }
-      // Weicher Kugelrand, kein quadratischer Rand
-      const edge = Math.min(
-        1,
-        (1 - Math.sqrt(r2)) * 110
+        )
+      );
+      data[i + 1] = Math.max(
+        0,
+        Math.min(
+          255,
+          Math.round(
+            (109 + relief * 0.88) * shade * vignette
+          )
+        )
+      );
+      data[i + 2] = Math.max(
+        0,
+        Math.min(
+          255,
+          Math.round(
+            (133 + relief * 1.12 + (large - 0.5) * 12) *
+            shade * vignette
+          )
+        )
       );
 
-      image.data[i + 3] =
-        Math.round(255 * edge);
+      const edge = Math.min(1, (1 - radius) * 110);
+      data[i + 3] = Math.round(255 * edge);
     }
   }
 
   ctx.putImageData(image, 0, 0);
-
   const texture = new THREE.CanvasTexture(canvas);
   texture.colorSpace = THREE.SRGBColorSpace;
-
   return texture;
 }
 
@@ -837,166 +811,133 @@ function drawBackground(ctx, width, height) {
 
   const g = small.getContext("2d");
   const image = g.createImageData(512, 256);
+  const data = image.data;
 
-  // Positionen von VISUALS und ECHOES auf der Kugel
-const centers = [PLACES[2], PLACES[3]].map(p => {
-  const lat = p.lat * RAD;
+  // Die Positionen stammen unveraendert aus VISUALS und ECHOES.
+  const centers = [PLACES[2], PLACES[3]].map(p => {
+    const lat = p.lat * RAD;
+    return {
+      sinLat: Math.sin(lat),
+      cosLat: Math.cos(lat),
+      lon: p.lon * RAD
+    };
+  });
 
-  return {
-    sinLat: Math.sin(lat),
-    cosLat: Math.cos(lat),
-    lon: p.lon * RAD
-  };
-});
+  // Ausschliesslich von x abhaengige Werte einmal berechnen.
+  const columns = Array.from({ length: 512 }, (_, x) => {
+    const u = x / 512;
+    const lon = (u - 0.25) * Math.PI * 2;
+
+    return {
+      waveX: u * Math.PI * 2,
+      glowX: u * Math.PI * 4,
+      flow1X: u * Math.PI * 6,
+      flow2X: u * Math.PI * 4,
+      flow3X: u * Math.PI * 8,
+      marbling2X: u * Math.PI * 12,
+      cosMarbling3X: Math.cos(u * Math.PI * 6),
+      lightingX: Math.cos(2 * Math.PI * (u - 0.25)),
+      greenCos0: Math.cos(lon - centers[0].lon),
+      greenCos1: Math.cos(lon - centers[1].lon)
+    };
+  });
 
   for (let y = 0; y < 256; y++) {
     const v = y / 255;
-
     const lat = (0.5 - v) * Math.PI;
     const sinLat = Math.sin(lat);
     const cosLat = Math.cos(lat);
 
+    // Ausschliesslich von y abhaengige Werte einmal pro Zeile.
+    const pole = smooth(
+      Math.min(1, Math.min(v, 1 - v) / 0.24)
+    );
+    const flow1Y = Math.sin(v * Math.PI * 4) * 1.8;
+    const flow2Y = Math.sin(v * Math.PI * 6) * 1.5;
+    const flow3Y = Math.cos(v * Math.PI * 5);
+    const waveY = v * 2.2;
+    const glowY = v * 3.1;
+    const marbling1Y = Math.sin(v * Math.PI * 4) * 1.4;
+    const marbling2Y = v * Math.PI * 5;
+    const marbling3Y = v * Math.PI * 7;
+    const lightingY = Math.sin(Math.PI * v);
+    const vignetteY =
+      1 - 0.07 * Math.pow(Math.abs(v - 0.5) * 2, 2);
+
+    const greenLat0 = sinLat * centers[0].sinLat;
+    const greenLon0 = cosLat * centers[0].cosLat;
+    const greenLat1 = sinLat * centers[1].sinLat;
+    const greenLon1 = cosLat * centers[1].cosLat;
+
     for (let x = 0; x < 512; x++) {
-      const u = x / 512;
-      const lon = (u - 0.25) * Math.PI * 2;
+      const col = columns[x];
 
-      // Bisherige Grundfarben erhalten
-      const pole = smooth(
-        Math.min(
-          1,
-          Math.min(v, 1 - v) / 0.24
-        )
-      );
+      const wave = Math.sin(col.waveX + waveY);
+      const glow = Math.cos(col.glowX - glowY);
 
-      const wave = Math.sin(
-        u * Math.PI * 2 + v * 2.2
-      );
-
-      const glow = Math.cos(
-        u * Math.PI * 4 - v * 3.1
-      );
-
-      // Bestehende organische Stroemungen
-      const flow1 = Math.sin(
-        u * Math.PI * 6 +
-        Math.sin(v * Math.PI * 4) * 1.8
-      );
-
-      const flow2 = Math.cos(
-        u * Math.PI * 4 +
-        Math.sin(v * Math.PI * 6) * 1.5
-      );
-
-      const flow3 = Math.sin(
-        u * Math.PI * 8 +
-        Math.cos(v * Math.PI * 5)
-      );
+      const flow1 = Math.sin(col.flow1X + flow1Y);
+      const flow2 = Math.cos(col.flow2X + flow2Y);
+      const flow3 = Math.sin(col.flow3X + flow3Y);
 
       const organic =
-        flow1 * 0.45 +
-        flow2 * 0.35 +
-        flow3 * 0.20;
+        flow1 * 0.45 + flow2 * 0.35 + flow3 * 0.20;
 
-      const base = [17, 67, 89];
-
-      const target = [
-        32 + wave * 18 + organic * 24,
-        131 + glow * 22 + organic * 31,
-        145 + wave * 20 + organic * 38
-      ];
-
-      const color = base.map((value, i) =>
-        lerp(value, target[i], pole)
+      const color0 = lerp(
+        17, 32 + wave * 18 + organic * 24, pole
+      );
+      const color1 = lerp(
+        67, 131 + glow * 22 + organic * 31, pole
+      );
+      const color2 = lerp(
+        89, 145 + wave * 20 + organic * 38, pole
       );
 
       const lighting =
-        (
-          1 +
-          0.035 *
-          Math.cos(2 * Math.PI * (u - 0.25)) *
-          Math.sin(Math.PI * v)
-        ) *
-        (
-          1 -
-          0.07 *
-          Math.pow(Math.abs(v - 0.5) * 2, 2)
-        );
+        (1 + 0.035 * col.lightingX * lightingY) * vignetteY;
 
-      // Grossflaechige, unregelmaessige Farbstruktur
       const marbling =
-        Math.sin(
-          u * Math.PI * 8 +
-          Math.sin(v * Math.PI * 4) * 1.4
-        ) * 0.47 +
+        Math.sin(col.flow3X + marbling1Y) * 0.47 +
+        Math.cos(col.marbling2X - marbling2Y) * 0.30 +
+        Math.sin(marbling3Y + col.cosMarbling3X) * 0.23;
 
-        Math.cos(
-          u * Math.PI * 12 -
-          v * Math.PI * 5
-        ) * 0.30 +
-
-        Math.sin(
-          v * Math.PI * 7 +
-          Math.cos(u * Math.PI * 6)
-        ) * 0.23;
-
-      // Gruene Farbanteile um VISUALS und ECHOES
+      const reach = 0.34 + 0.10 * marbling;
       let greenInfluence = 0;
-for (const center of centers) {
-     const dot = clamp(
-  sinLat * center.sinLat +
-  cosLat *
-  center.cosLat *
-  Math.cos(lon - center.lon),
-  -1,
-  1
-);
 
-        const angle = Math.acos(dot);
+      // Beide Farbzentren mit denselben Formeln wie bisher.
+      const dot0 = clamp(
+        greenLat0 + greenLon0 * col.greenCos0, -1, 1
+      );
+      const influence0 =
+        1 - smooth((Math.acos(dot0) - reach) / 1.05);
+      greenInfluence =
+        1 - (1 - greenInfluence) * (1 - influence0);
 
-        const reach =
-          0.34 + 0.10 * marbling;
+      const dot1 = clamp(
+        greenLat1 + greenLon1 * col.greenCos1, -1, 1
+      );
+      const influence1 =
+        1 - smooth((Math.acos(dot1) - reach) / 1.05);
+      greenInfluence =
+        1 - (1 - greenInfluence) * (1 - influence1);
 
-        const influence =
-          1 - smooth(
-            (angle - reach) / 1.05
-          );
-
-
-        greenInfluence =
-          1 -
-          (1 - greenInfluence) *
-          (1 - influence);
-      }
-
-      // Weicher, grossflaechiger Uebergang
       const mix = clamp(
-        greenInfluence *
-        (0.66 + 0.09 * organic),
-        0,
-        0.78
+        greenInfluence * (0.66 + 0.09 * organic), 0, 0.78
       );
 
-      const forest = [
-        12 + marbling * 4,
-        48 + marbling * 10,
-        34 + marbling * 6
-      ];
-
       const j = (y * 512 + x) * 4;
-
-      for (let k = 0; k < 3; k++) {
-        image.data[j + k] = clamp(
-          lerp(
-            color[k],
-            forest[k],
-            mix
-          ) * lighting,
-          0,
-          255
-        );
-      }
-
-      image.data[j + 3] = 255;
+      data[j] = clamp(
+        lerp(color0, 12 + marbling * 4, mix) * lighting,
+        0, 255
+      );
+      data[j + 1] = clamp(
+        lerp(color1, 48 + marbling * 10, mix) * lighting,
+        0, 255
+      );
+      data[j + 2] = clamp(
+        lerp(color2, 34 + marbling * 6, mix) * lighting,
+        0, 255
+      );
+      data[j + 3] = 255;
     }
   }
 
@@ -1004,14 +945,7 @@ for (const center of centers) {
 
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = "high";
-
-  ctx.drawImage(
-    small,
-    0,
-    0,
-    width,
-    height
-  );
+  ctx.drawImage(small, 0, 0, width, height);
 }
 
 /* =========================================
