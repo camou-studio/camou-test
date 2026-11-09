@@ -2535,16 +2535,11 @@ async function createGlobeTexture() {
     MAP_W,
     MAP_H
   );
-
-  // Unveränderliche Grundtextur ohne Bilder.
-  baseTextureCanvas = document.createElement("canvas");
-
-  baseTextureCanvas.width = MAP_W;
-  baseTextureCanvas.height = MAP_H;
-
-  baseTextureCanvas
-    .getContext("2d")
-    .drawImage(globeCanvas, 0, 0);
+ 
+  // CAMOU V2 verwendet eigene Canvas-Texturen
+  // fuer die fuenf Inhaltsbereiche.
+  // Die grosse Sicherheitskopie aus V1
+  // wird nicht mehr benoetigt.
 
   images.forEach((image, index) => {
     drawWrappedPanel(
