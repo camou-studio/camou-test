@@ -2502,7 +2502,13 @@ function refreshEchoesTexture() {
    KUGELTEXTUR ERSTELLEN
 ========================================= */
 
+
 async function createGlobeTexture() {
+  // Die vier VISUALS-Slides behalten feste Positionen.
+  // Der erste Slide wird erst nach HOME geladen.
+  visualImages = new Array(ASSETS.visualSlides.length).fill(null);
+  visualIndex = 0;
+
   const canvasFontsReady = document.fonts?.load
     ? Promise.allSettled([
         document.fonts.load("300 58px Manrope"),
@@ -2512,24 +2518,8 @@ async function createGlobeTexture() {
       ])
     : Promise.resolve();
 
-  const images = await Promise.all([
-    ASSETS.home,
-    ASSETS.music,
-    ASSETS.visuals,
-    ASSETS.archive,
-    ASSETS.contact
-  ].map(loadImage));
-
-
-
-  // Erstes VISUALS-Bild bereits vorhanden.
-  // Weitere Bilder erst beim Aufruf laden.
-  visualImages = [
-    images[2],
-    ...ASSETS.visualSlides.slice(1).map(() => null)
-  ];
-
-  visualIndex = 0;
+  // Beim Start wird nur das HOME-Bild angefordert.
+  const homeImage = await loadImage(ASSETS.home);
   await canvasFontsReady;
 
   globeCanvas = document.createElement("canvas");
@@ -2537,38 +2527,67 @@ async function createGlobeTexture() {
   globeCanvas.height = MAP_H;
   globeContext = globeCanvas.getContext("2d");
 
-  drawBackground(
-    globeContext,
-    MAP_W,
-    MAP_H
-  );
- 
-  // CAMOU V2 verwendet eigene Canvas-Texturen
-  // fuer die fuenf Inhaltsbereiche.
-  // Die grosse Sicherheitskopie aus V1
-  // wird nicht mehr benoetigt.
+  drawBackground(globeContext, MAP_W, MAP_H);
 
-  images.forEach((image, index) => {
-    drawWrappedPanel(
-      globeContext,
-      index,
-      index === 2 ? visualImages[0] : image
-    );
-  });
+  // Als erstes nur HOME auf der V2-Kugel bereitstellen.
+  drawWrappedPanel(globeContext, 0, homeImage);
 
-  globeTexture = new THREE.CanvasTexture(
-    globeCanvas
-  );
-
+  globeTexture = new THREE.CanvasTexture(globeCanvas);
   globeTexture.colorSpace = THREE.SRGBColorSpace;
   globeTexture.wrapS = THREE.RepeatWrapping;
-globeTexture.wrapT = THREE.ClampToEdgeWrapping;
-globeTexture.needsUpdate = true;
-   
+  globeTexture.wrapT = THREE.ClampToEdgeWrapping;
+  globeTexture.needsUpdate = true;
   globeTexture.anisotropy =
     renderer.capabilities.getMaxAnisotropy();
 
   return globeTexture;
+}
+
+function camouLoadRemainingSections() {
+  // Transparente Ersatzgrafik, solange ein Bild noch laedt.
+  // Damit existieren die klickbaren V2-Bereiche schon vorher.
+  const placeholder = document.createElement("canvas");
+  placeholder.width = 1;
+  placeholder.height = 1;
+
+  // Die vier Bilder unabhaengig voneinander laden.
+  // Keine gemeinsame Promise.all-Sperre fuer HOME.
+  for (let index = 1; index < sections.length; index++) {
+    loadImage(sections[index].image).then(image => {
+      if (index === 2) {
+        visualImages[0] = image;
+      }
+
+      drawWrappedPanel(globeContext, index, image);
+    }).catch(error => {
+      console.error(
+        "CAMOU: Bereich konnte nicht gezeichnet werden",
+        index,
+        error
+      );
+    });
+  }
+
+  // Fehlende V2-Bereiche auf mehrere Frames verteilen,
+  // damit Maus, Touch und Navigation responsiv bleiben.
+  let nextIndex = 1;
+
+  function prepareNextPanel() {
+    if (nextIndex >= sections.length) return;
+
+    // Falls das echte Bild schon da ist, nichts ueberschreiben.
+    if (!CAMOU_V2_CANVASES[nextIndex]) {
+      drawWrappedPanel(globeContext, nextIndex, placeholder);
+    }
+
+    nextIndex++;
+
+    if (nextIndex < sections.length) {
+      requestAnimationFrame(prepareNextPanel);
+    }
+  }
+
+  requestAnimationFrame(prepareNextPanel);
 }
 
 createGlobeTexture()
@@ -2577,9 +2596,13 @@ createGlobeTexture()
     globe.material.needsUpdate = true;
     sceneNeedsRender = true;
 
-    console.info(
-      "CAMOU: Entdecker-Kugel geladen."
-    );
+    console.info("CAMOU: HOME-Kugel geladen.");
+
+    // HOME zuerst rendern lassen. Danach beginnt das
+    // unabhaengige Nachladen der vier uebrigen Bereiche.
+    requestAnimationFrame(() => {
+      setTimeout(camouLoadRemainingSections, 0);
+    });
   })
   .catch(error => {
     console.error(
