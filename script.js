@@ -2543,53 +2543,211 @@ async function createGlobeTexture() {
   return globeTexture;
 }
 
-function camouLoadRemainingSections() {
-  // Transparente Ersatzgrafik, solange ein Bild noch laedt.
-  // Damit existieren die klickbaren V2-Bereiche schon vorher.
-  const placeholder = document.createElement("canvas");
-  placeholder.width = 1;
-  placeholder.height = 1;
+/* =========================================
+   CAMOU: GESTAFFELTES NACHLADEN
+========================================= */
 
-  // Die vier Bilder unabhaengig voneinander laden.
-  // Keine gemeinsame Promise.all-Sperre fuer HOME.
-  for (let index = 1; index < sections.length; index++) {
-    loadImage(sections[index].image).then(image => {
+// Zustand pro Bereich. HOME wird getrennt davor aufgebaut.
+const camouSectionLoadState = sections.map((_, index) => ({
+  ready: index === 0,
+  urgent: false,
+  promise: null,
+  wake: null
+}));
+
+let camouHomeReady = false;
+let camouBackgroundStarted = false;
+let camouLastViewedSection = 0;
+
+// Nur fuer eine sehr fruehe Navigation.
+// Die echte Grafik ersetzt diesen Platzhalter.
+const camouPendingPhoto = document.createElement("canvas");
+camouPendingPhoto.width = 1;
+camouPendingPhoto.height = 1;
+
+function camouWaitForIdle() {
+  return new Promise(resolve => {
+    if (typeof requestIdleCallback === "function") {
+      requestIdleCallback(resolve, { timeout: 1800 });
+    } else {
+      setTimeout(resolve, 120);
+    }
+  });
+}
+
+// Hintergrundarbeit bevorzugt in ruhigen Browserphasen.
+// Bei einer Navigation darf die Wartezeit enden.
+async function camouWaitForPaintSlot(state) {
+  const busy = () =>
+    isDragging || menuAnimating ||
+    !!camouWorldFlight || camouWorldMode === "planet";
+
+  while (!state.urgent && busy()) {
+    await new Promise(resolve => setTimeout(resolve, 150));
+  }
+
+  if (state.urgent) return;
+
+  await new Promise(resolve => {
+    let completed = false;
+    let idleId = null;
+    let timerId = null;
+
+    const finish = () => {
+      if (completed) return;
+
+      completed = true;
+      state.wake = null;
+
+      if (
+        idleId !== null &&
+        typeof cancelIdleCallback === "function"
+      ) {
+        cancelIdleCallback(idleId);
+      }
+
+      if (timerId !== null) clearTimeout(timerId);
+
+      resolve();
+    };
+
+    state.wake = finish;
+
+    if (typeof requestIdleCallback === "function") {
+      idleId = requestIdleCallback(
+        finish,
+        { timeout: 1800 }
+      );
+    } else {
+      timerId = setTimeout(finish, 120);
+    }
+  });
+
+  // Hat waehrend der Wartezeit eine Geste begonnen?
+  if (!state.urgent && busy()) {
+    await camouWaitForPaintSlot(state);
+  }
+}
+
+// Jeden Bereich nur einmal herunterladen.
+function camouPrepareSection(index) {
+  const state = camouSectionLoadState[index];
+
+  if (!state || state.ready) {
+    return Promise.resolve();
+  }
+
+  if (state.promise) {
+    return state.promise;
+  }
+
+  state.promise = (async () => {
+
+    if (index === 3) {
+      // ECHOES benoetigt nur den gezeichneten Kompass.
+      await camouWaitForPaintSlot(state);
+
+      if (!CAMOU_V2_CANVASES[index]) {
+        drawWrappedPanel(globeContext, index, null);
+      }
+
+    } else {
+      // MUSIC, VISUALS und CONTACT.
+      const image = await loadImage(
+        sections[index].image
+      );
+
+      // Bild nach Moeglichkeit vorher dekodieren.
+      if (typeof image.decode === "function") {
+        try {
+          await image.decode();
+        } catch (_) {}
+      }
+
       if (index === 2) {
         visualImages[0] = image;
       }
 
-      drawWrappedPanel(globeContext, index, image);
-    }).catch(error => {
-      console.error(
-        "CAMOU: Bereich konnte nicht gezeichnet werden",
+      await camouWaitForPaintSlot(state);
+
+      drawWrappedPanel(
+        globeContext,
         index,
-        error
+        image
       );
-    });
-  }
-
-  // Fehlende V2-Bereiche auf mehrere Frames verteilen,
-  // damit Maus, Touch und Navigation responsiv bleiben.
-  let nextIndex = 1;
-
-  function prepareNextPanel() {
-    if (nextIndex >= sections.length) return;
-
-    // Falls das echte Bild schon da ist, nichts ueberschreiben.
-    if (!CAMOU_V2_CANVASES[nextIndex]) {
-      drawWrappedPanel(globeContext, nextIndex, placeholder);
     }
 
-    nextIndex++;
+    state.ready = true;
 
-    if (nextIndex < sections.length) {
-      requestAnimationFrame(prepareNextPanel);
-    }
-  }
+  })().catch(error => {
+    state.promise = null;
 
-  requestAnimationFrame(prepareNextPanel);
+    console.error(
+      "CAMOU: Bereich konnte nicht geladen werden",
+      index,
+      error
+    );
+  });
+
+  return state.promise;
 }
 
+// Navigation und manuelles Drehen haben Vorrang.
+function camouPrioritizeSection(index) {
+  if (index < 1 || index >= sections.length) {
+    return;
+  }
+
+  const state = camouSectionLoadState[index];
+
+  if (state.ready) return;
+
+  state.urgent = true;
+
+  // Eine wartende Hintergrundaufgabe aufwecken.
+  state.wake?.();
+
+  // HOME muss zuerst initialisiert sein.
+  if (!camouHomeReady) return;
+
+  // Interaktive Flaeche sofort erstellen.
+  // Das echte Bild wird anschliessend eingesetzt.
+  if (!CAMOU_V2_CANVASES[index]) {
+    drawWrappedPanel(
+      globeContext,
+      index,
+      index === 2 || index === 3
+        ? null
+        : camouPendingPhoto
+    );
+  }
+
+  void camouPrepareSection(index);
+}
+
+// Normales Nachladen strikt nacheinander.
+async function camouLoadRemainingSections() {
+  if (camouBackgroundStarted) return;
+
+  camouBackgroundStarted = true;
+
+  // MUSIC, VISUALS, ECHOES, CONTACT.
+  for (const index of [1, 2, 3, 4]) {
+    const state = camouSectionLoadState[index];
+
+    // Bereits geladen oder durch Navigation gestartet?
+    if (state.ready || state.promise) continue;
+
+    // Vor jedem weiteren Bereich freie Zeit abwarten.
+    await camouWaitForIdle();
+
+    if (state.ready || state.promise) continue;
+
+    await camouPrepareSection(index);
+  }
+}
+
+// Zuerst HOME. Danach die Hintergrundwarteschlange.
 createGlobeTexture()
   .then(texture => {
     globe.material.map = texture;
@@ -2598,10 +2756,20 @@ createGlobeTexture()
 
     console.info("CAMOU: HOME-Kugel geladen.");
 
-    // HOME zuerst rendern lassen. Danach beginnt das
-    // unabhaengige Nachladen der vier uebrigen Bereiche.
+    camouHomeReady = true;
+
+    // Sehr fruehe Navigationswünsche berücksichtigen.
+    for (let index = 1; index < sections.length; index++) {
+      if (camouSectionLoadState[index].urgent) {
+        camouPrioritizeSection(index);
+      }
+    }
+
+    // HOME zunaechst rendern lassen.
     requestAnimationFrame(() => {
-      setTimeout(camouLoadRemainingSections, 0);
+      requestAnimationFrame(() => {
+        void camouLoadRemainingSections();
+      });
     });
   })
   .catch(error => {
@@ -6157,27 +6325,25 @@ else if (f.phase === "swapOut") {
 const camouOriginalGoToSection = goToSection;
 
 goToSection = function(index) {
-  // VISUALS-Bilder erst bei Aufruf laden.
-  if (index === 2) {
-    void camouEnsureVisualSlides();
-  }
+  const target = ((index % 5) + 5) % 5;
 
-  // Vom zweiten Planeten zu CAMOU zurueck.
+  // Der gewaehlte Bereich bekommt sofort Vorrang.
+  // Weitere VISUALS-Dias erst beim Hebel laden.
   if (camouWorldMode === "planet") {
-    camouFlyToWorld(
-      "camou",
-      ((index % 5) + 5) % 5
-    );
+    camouPrioritizeSection(target);
+
+    camouFlyToWorld("camou", target);
     return;
   }
 
   if (camouWorldFlight) return;
 
-  camouOriginalGoToSection(index);
+  camouPrioritizeSection(target);
+
+  camouOriginalGoToSection(target);
 };
 
 const camouOriginalIndicator = updateIndicator;
-
 
 updateIndicator = function() {
   // Auf dem Projektplaneten bleibt PLANET aktiv.
@@ -6189,12 +6355,26 @@ updateIndicator = function() {
     return;
   }
 
-  // Waehrend des Hin- und Rueckflugs
-  // keine automatische Anzeige aktualisieren.
+  // Waehrend der Planetenfluege keine
+  // normale Bereichsanzeige aktualisieren.
   if (camouWorldFlight) return;
 
-  // Zurueck auf CAMOU:
-  // normale Bereichsanzeige wiederherstellen.
+  // Manuelles Drehen mit Maus oder Fingern:
+  // neu sichtbaren Bereich sofort priorisieren.
+  if (
+    camouHomeReady &&
+    camouWorldMode === "camou"
+  ) {
+    const visibleIndex = currentIndex();
+
+    if (visibleIndex !== camouLastViewedSection) {
+      camouLastViewedSection = visibleIndex;
+
+      camouPrioritizeSection(visibleIndex);
+    }
+  }
+
+  // Normale CAMOU-Navigation wiederherstellen.
   camouOriginalIndicator();
 };
 
