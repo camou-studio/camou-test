@@ -742,17 +742,7 @@ function loadImage(src) {
   return new Promise(resolve => {
     const img = new Image();
 
-    // HOME zuerst; die anderen Bereiche weiter parallel vorbereiten.
-    // Kein Lazy Loading, damit beim freien Drehen keine Bilder fehlen.
-    if (src === ASSETS.home && "fetchPriority" in img) {
-      img.fetchPriority = "high";
-    }
-
-    // Bild vor der Canvas-Zeichnung asynchron dekodieren.
-    // Die gleiche Grafik wird erst nach erfolgreichem Laden verwendet.
-    img.decoding = "async";
-    
-img.onload = () => resolve(img);
+    img.onload = () => resolve(img);
 
     img.onerror = () => {
       const canvas = document.createElement("canvas");
@@ -845,24 +835,11 @@ function drawBackground(ctx, width, height) {
   const g = small.getContext("2d");
   const image = g.createImageData(512, 256);
 
-  // Positionen von VISUALS und ECHOES auf der Kugel.
-  // Trigonometrie einmal statt fuer jeden einzelnen Pixel.
-  const centers = [PLACES[2], PLACES[3]].map(p => {
-    const lat = p.lat * RAD;
-    return {
-      lon: p.lon * RAD,
-      sinLat: Math.sin(lat),
-      cosLat: Math.cos(lat)
-    };
-  });
-
-  const lightingCosByX = new Float64Array(512);
-  const marblingCosByX = new Float64Array(512);
-  for (let x = 0; x < 512; x++) {
-    const u = x / 512;
-    lightingCosByX[x] = Math.cos(2 * Math.PI * (u - 0.25));
-    marblingCosByX[x] = Math.cos(u * Math.PI * 6);
-  }
+  // Positionen von VISUALS und ECHOES auf der Kugel
+  const centers = [PLACES[2], PLACES[3]].map(p => ({
+    lat: p.lat * RAD,
+    lon: p.lon * RAD
+  }));
 
   for (let y = 0; y < 256; y++) {
     const v = y / 255;
@@ -870,18 +847,18 @@ function drawBackground(ctx, width, height) {
     const lat = (0.5 - v) * Math.PI;
     const sinLat = Math.sin(lat);
     const cosLat = Math.cos(lat);
-    const sinV4 = Math.sin(v * Math.PI * 4);
-    const sinV6 = Math.sin(v * Math.PI * 6);
-    const cosV5 = Math.cos(v * Math.PI * 5);
-    const sinVPi = Math.sin(Math.PI * v);
-    const lightingV = 1 - 0.07 * Math.pow(Math.abs(v - 0.5) * 2, 2);
-    const pole = smooth(Math.min(1, Math.min(v, 1 - v) / 0.24));
 
     for (let x = 0; x < 512; x++) {
       const u = x / 512;
       const lon = (u - 0.25) * Math.PI * 2;
 
-      // Bisherige Grundfarben bleiben unveraendert.
+      // Bisherige Grundfarben erhalten
+      const pole = smooth(
+        Math.min(
+          1,
+          Math.min(v, 1 - v) / 0.24
+        )
+      );
 
       const wave = Math.sin(
         u * Math.PI * 2 + v * 2.2
@@ -894,17 +871,17 @@ function drawBackground(ctx, width, height) {
       // Bestehende organische Stroemungen
       const flow1 = Math.sin(
         u * Math.PI * 6 +
-        sinV4 * 1.8
+        Math.sin(v * Math.PI * 4) * 1.8
       );
 
       const flow2 = Math.cos(
         u * Math.PI * 4 +
-        sinV6 * 1.5
+        Math.sin(v * Math.PI * 6) * 1.5
       );
 
       const flow3 = Math.sin(
         u * Math.PI * 8 +
-        cosV5
+        Math.cos(v * Math.PI * 5)
       );
 
       const organic =
@@ -912,24 +889,36 @@ function drawBackground(ctx, width, height) {
         flow2 * 0.35 +
         flow3 * 0.20;
 
-      const colorR = lerp(17, 32 + wave * 18 + organic * 24, pole);
-      const colorG = lerp(67, 131 + glow * 22 + organic * 31, pole);
-      const colorB = lerp(89, 145 + wave * 20 + organic * 38, pole);
+      const base = [17, 67, 89];
+
+      const target = [
+        32 + wave * 18 + organic * 24,
+        131 + glow * 22 + organic * 31,
+        145 + wave * 20 + organic * 38
+      ];
+
+      const color = base.map((value, i) =>
+        lerp(value, target[i], pole)
+      );
 
       const lighting =
         (
           1 +
           0.035 *
-          lightingCosByX[x] *
-          sinVPi
+          Math.cos(2 * Math.PI * (u - 0.25)) *
+          Math.sin(Math.PI * v)
         ) *
-        lightingV;
+        (
+          1 -
+          0.07 *
+          Math.pow(Math.abs(v - 0.5) * 2, 2)
+        );
 
       // Grossflaechige, unregelmaessige Farbstruktur
       const marbling =
         Math.sin(
           u * Math.PI * 8 +
-          sinV4 * 1.4
+          Math.sin(v * Math.PI * 4) * 1.4
         ) * 0.47 +
 
         Math.cos(
@@ -939,7 +928,7 @@ function drawBackground(ctx, width, height) {
 
         Math.sin(
           v * Math.PI * 7 +
-          marblingCosByX[x]
+          Math.cos(u * Math.PI * 6)
         ) * 0.23;
 
       // Gruene Farbanteile um VISUALS und ECHOES
@@ -947,9 +936,9 @@ function drawBackground(ctx, width, height) {
 
       for (const center of centers) {
         const dot = clamp(
-          sinLat * center.sinLat +
+          sinLat * Math.sin(center.lat) +
           cosLat *
-          center.cosLat *
+          Math.cos(center.lat) *
           Math.cos(lon - center.lon),
           -1,
           1
@@ -980,18 +969,26 @@ function drawBackground(ctx, width, height) {
         0.78
       );
 
+      const forest = [
+        12 + marbling * 4,
+        48 + marbling * 10,
+        34 + marbling * 6
+      ];
+
       const j = (y * 512 + x) * 4;
 
-      // Identische Farbformeln, ohne drei neue Arrays pro Pixel.
-      image.data[j] = clamp(
-        lerp(colorR, 12 + marbling * 4, mix) * lighting, 0, 255
-      );
-      image.data[j + 1] = clamp(
-        lerp(colorG, 48 + marbling * 10, mix) * lighting, 0, 255
-      );
-      image.data[j + 2] = clamp(
-        lerp(colorB, 34 + marbling * 6, mix) * lighting, 0, 255
-      );
+      for (let k = 0; k < 3; k++) {
+        image.data[j + k] = clamp(
+          lerp(
+            color[k],
+            forest[k],
+            mix
+          ) * lighting,
+          0,
+          255
+        );
+      }
+
       image.data[j + 3] = 255;
     }
   }
@@ -2539,9 +2536,15 @@ async function createGlobeTexture() {
     MAP_H
   );
 
-  // V2 verwendet fuer die fuenf Inhaltsbereiche eigene Canvas-Texturen.
-  // Die 4096x2048-Sicherheitskopie gehoerte zur nicht mehr aktiven V1.
-  // Kein zweites 32-MB-Canvas mehr erzeugen.
+  // Unveränderliche Grundtextur ohne Bilder.
+  baseTextureCanvas = document.createElement("canvas");
+
+  baseTextureCanvas.width = MAP_W;
+  baseTextureCanvas.height = MAP_H;
+
+  baseTextureCanvas
+    .getContext("2d")
+    .drawImage(globeCanvas, 0, 0);
 
   images.forEach((image, index) => {
     drawWrappedPanel(
@@ -6195,4 +6198,3 @@ handleGlobeClick = function(event) {
 camouCreatePortal();
 
 /* ENDE CAMOU PROJEKTPLANET 02 */
-
