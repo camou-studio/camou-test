@@ -153,7 +153,10 @@ const renderer = new THREE.WebGLRenderer({
 });
 
 renderer.setPixelRatio(
-  Math.min(window.devicePixelRatio, 2)
+  Math.min(
+    window.devicePixelRatio,
+    mobile ? 1.5 : 2
+  )
 );
 
 renderer.setSize(
@@ -528,8 +531,8 @@ globeGroup.add(atmosphere);
    FREIE POSITIONIERUNG AUF DER KUGEL
 ========================================= */
 
-const MAP_W = 4096;
-const MAP_H = 2048;
+const MAP_W = 2048;
+const MAP_H = 1024;
 const RAD = Math.PI / 180;
 
 // Neigung der gesamten Komposition um ihre eigene Kugelmitte.
@@ -4012,9 +4015,12 @@ function resize() {
 
   renderer.setSize(w, h);
 
-  renderer.setPixelRatio(
-    Math.min(window.devicePixelRatio, 2)
-  );
+renderer.setPixelRatio(
+  Math.min(
+    window.devicePixelRatio,
+    mobile ? 1.5 : 2
+  )
+);
 
   sceneNeedsRender = true;
 }
