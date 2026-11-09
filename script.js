@@ -368,25 +368,43 @@ function createRockyPlanetTexture() {
   return texture;
 }
 
-const camouPlanetTexture = createRockyPlanetTexture();
-
-// CAMOU: Planetentextur einmalig exportieren
-const camouPlanetExportCanvas = document.createElement("canvas");
-camouPlanetExportCanvas.width = 256;
-camouPlanetExportCanvas.height = 256;
-
-const camouPlanetExportContext =
-  camouPlanetExportCanvas.getContext("2d");
-
-camouPlanetExportContext.drawImage(
-  camouPlanetTexture.image,
-  0,
-  0
+// CAMOU: Vorberechnete Gesteinsplanet-Textur laden
+const camouPlanetTexture = new THREE.TextureLoader().load(
+  new URL(
+    "./assets/camou-rocky-planet.png",
+    import.meta.url
+  ).href,
+  () => {
+    sceneNeedsRender = true;
+  },
+  undefined,
+  error => {
+    console.error(
+      "CAMOU: Planetentextur konnte nicht geladen werden",
+      error
+    );
+  }
 );
 
-camouPlanetExportCanvas.toBlob(blob => {
-  if (!blob) return;
+camouPlanetTexture.colorSpace = THREE.SRGBColorSpace;
 
+const camouPlanet = new THREE.Sprite(
+  new THREE.SpriteMaterial({
+    map: camouPlanetTexture,
+    transparent: true,
+    depthWrite: false,
+    depthTest: true,
+    toneMapped: false
+  })
+);
+
+// Ursprüngliche Position und Grösse beibehalten
+camouPlanet.position.set(-8, -4.5, -25);
+camouPlanet.scale.set(2.2, 2.2, 1);
+
+camouPlanet.renderOrder = -9;
+
+camera.add(camouPlanet);
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
 
