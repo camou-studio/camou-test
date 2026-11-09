@@ -751,16 +751,8 @@ function loadImage(src) {
     // Bild vor der Canvas-Zeichnung asynchron dekodieren.
     // Die gleiche Grafik wird erst nach erfolgreichem Laden verwendet.
     img.decoding = "async";
-    img.onload = async () => {
-      if (typeof img.decode === "function") {
-        try {
-          await img.decode();
-        } catch (_) {
-          // Bereits geladenes Bild bei decode-Fehler weiterverwenden.
-        }
-      }
-      resolve(img);
-    };
+    
+img.onload = () => resolve(img);
 
     img.onerror = () => {
       const canvas = document.createElement("canvas");
