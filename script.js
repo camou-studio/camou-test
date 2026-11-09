@@ -938,8 +938,8 @@ const centers = [PLACES[2], PLACES[3]].map(p => {
 
       // Gruene Farbanteile um VISUALS und ECHOES
       let greenInfluence = 0;
-
-const dot = clamp(
+for (const center of centers) {
+     const dot = clamp(
   sinLat * center.sinLat +
   cosLat *
   center.cosLat *
