@@ -836,10 +836,15 @@ function drawBackground(ctx, width, height) {
   const image = g.createImageData(512, 256);
 
   // Positionen von VISUALS und ECHOES auf der Kugel
-  const centers = [PLACES[2], PLACES[3]].map(p => ({
-    lat: p.lat * RAD,
+const centers = [PLACES[2], PLACES[3]].map(p => {
+  const lat = p.lat * RAD;
+
+  return {
+    sinLat: Math.sin(lat),
+    cosLat: Math.cos(lat),
     lon: p.lon * RAD
-  }));
+  };
+});
 
   for (let y = 0; y < 256; y++) {
     const v = y / 255;
@@ -934,15 +939,14 @@ function drawBackground(ctx, width, height) {
       // Gruene Farbanteile um VISUALS und ECHOES
       let greenInfluence = 0;
 
-      for (const center of centers) {
-        const dot = clamp(
-          sinLat * Math.sin(center.lat) +
-          cosLat *
-          Math.cos(center.lat) *
-          Math.cos(lon - center.lon),
-          -1,
-          1
-        );
+const dot = clamp(
+  sinLat * center.sinLat +
+  cosLat *
+  center.cosLat *
+  Math.cos(lon - center.lon),
+  -1,
+  1
+);
 
         const angle = Math.acos(dot);
 
