@@ -370,6 +370,33 @@ function createRockyPlanetTexture() {
 
 const camouPlanetTexture = createRockyPlanetTexture();
 
+// CAMOU: Planetentextur einmalig exportieren
+const camouPlanetExportCanvas = document.createElement("canvas");
+camouPlanetExportCanvas.width = 256;
+camouPlanetExportCanvas.height = 256;
+
+const camouPlanetExportContext =
+  camouPlanetExportCanvas.getContext("2d");
+
+camouPlanetExportContext.drawImage(
+  camouPlanetTexture.image,
+  0,
+  0
+);
+
+camouPlanetExportCanvas.toBlob(blob => {
+  if (!blob) return;
+
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+
+  link.href = url;
+  link.download = "camou-rocky-planet.png";
+  link.click();
+
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}, "image/png");
+
 const camouPlanet = new THREE.Sprite(
   new THREE.SpriteMaterial({
     map: camouPlanetTexture,
