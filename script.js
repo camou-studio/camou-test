@@ -815,7 +815,6 @@ function playButton(ctx, x, y) {
    ORGANISCHER HINTERGRUND
 ========================================= */
 
-
 function drawBackground(ctx, width, height) {
   const small = document.createElement("canvas");
   small.width = 512;
@@ -825,9 +824,9 @@ function drawBackground(ctx, width, height) {
   const image = g.createImageData(512, 256);
   const data = image.data;
 
-  // Die Positionen stammen unveraendert aus VISUALS und ECHOES.
   const centers = [PLACES[2], PLACES[3]].map(p => {
     const lat = p.lat * RAD;
+
     return {
       sinLat: Math.sin(lat),
       cosLat: Math.cos(lat),
@@ -835,120 +834,232 @@ function drawBackground(ctx, width, height) {
     };
   });
 
-  // Ausschliesslich von x abhaengige Werte einmal berechnen.
+  // X-Werte einmalig vorberechnen
   const columns = Array.from({ length: 512 }, (_, x) => {
     const u = x / 512;
     const lon = (u - 0.25) * Math.PI * 2;
 
+    const waveX = u * Math.PI * 2;
+    const glowX = u * Math.PI * 4;
+    const flow1X = u * Math.PI * 6;
+    const flow2X = u * Math.PI * 4;
+    const flow3X = u * Math.PI * 8;
+    const marbling2X = u * Math.PI * 12;
+
+    const marbling3Angle =
+      Math.cos(u * Math.PI * 6);
+
     return {
-      waveX: u * Math.PI * 2,
-      glowX: u * Math.PI * 4,
-      flow1X: u * Math.PI * 6,
-      flow2X: u * Math.PI * 4,
-      flow3X: u * Math.PI * 8,
-      marbling2X: u * Math.PI * 12,
-      cosMarbling3X: Math.cos(u * Math.PI * 6),
-      lightingX: Math.cos(2 * Math.PI * (u - 0.25)),
+      waveSin: Math.sin(waveX),
+      waveCos: Math.cos(waveX),
+
+      glowSin: Math.sin(glowX),
+      glowCos: Math.cos(glowX),
+
+      flow1Sin: Math.sin(flow1X),
+      flow1Cos: Math.cos(flow1X),
+
+      flow2Sin: Math.sin(flow2X),
+      flow2Cos: Math.cos(flow2X),
+
+      flow3Sin: Math.sin(flow3X),
+      flow3Cos: Math.cos(flow3X),
+
+      marbling2Sin: Math.sin(marbling2X),
+      marbling2Cos: Math.cos(marbling2X),
+
+      marbling3ArgSin: Math.sin(marbling3Angle),
+      marbling3ArgCos: Math.cos(marbling3Angle),
+
+      lightingX: Math.cos(
+        2 * Math.PI * (u - 0.25)
+      ),
+
       greenCos0: Math.cos(lon - centers[0].lon),
       greenCos1: Math.cos(lon - centers[1].lon)
     };
   });
 
+  // Y-Werte einmalig pro Zeile vorberechnen
   for (let y = 0; y < 256; y++) {
     const v = y / 255;
+
     const lat = (0.5 - v) * Math.PI;
     const sinLat = Math.sin(lat);
     const cosLat = Math.cos(lat);
 
-    // Ausschliesslich von y abhaengige Werte einmal pro Zeile.
     const pole = smooth(
       Math.min(1, Math.min(v, 1 - v) / 0.24)
     );
+
     const flow1Y = Math.sin(v * Math.PI * 4) * 1.8;
     const flow2Y = Math.sin(v * Math.PI * 6) * 1.5;
     const flow3Y = Math.cos(v * Math.PI * 5);
+
     const waveY = v * 2.2;
     const glowY = v * 3.1;
-    const marbling1Y = Math.sin(v * Math.PI * 4) * 1.4;
+
+    const marbling1Y =
+      Math.sin(v * Math.PI * 4) * 1.4;
+
     const marbling2Y = v * Math.PI * 5;
     const marbling3Y = v * Math.PI * 7;
+
+    const waveYSin = Math.sin(waveY);
+    const waveYCos = Math.cos(waveY);
+
+    const glowYSin = Math.sin(glowY);
+    const glowYCos = Math.cos(glowY);
+
+    const flow1YSin = Math.sin(flow1Y);
+    const flow1YCos = Math.cos(flow1Y);
+
+    const flow2YSin = Math.sin(flow2Y);
+    const flow2YCos = Math.cos(flow2Y);
+
+    const flow3YSin = Math.sin(flow3Y);
+    const flow3YCos = Math.cos(flow3Y);
+
+    const marbling1YSin = Math.sin(marbling1Y);
+    const marbling1YCos = Math.cos(marbling1Y);
+
+    const marbling2YSin = Math.sin(marbling2Y);
+    const marbling2YCos = Math.cos(marbling2Y);
+
+    const marbling3YSin = Math.sin(marbling3Y);
+    const marbling3YCos = Math.cos(marbling3Y);
+
     const lightingY = Math.sin(Math.PI * v);
+
     const vignetteY =
       1 - 0.07 * Math.pow(Math.abs(v - 0.5) * 2, 2);
 
     const greenLat0 = sinLat * centers[0].sinLat;
     const greenLon0 = cosLat * centers[0].cosLat;
+
     const greenLat1 = sinLat * centers[1].sinLat;
     const greenLon1 = cosLat * centers[1].cosLat;
 
+    // Pixelberechnung
     for (let x = 0; x < 512; x++) {
       const col = columns[x];
 
-      const wave = Math.sin(col.waveX + waveY);
-      const glow = Math.cos(col.glowX - glowY);
+      // Sinus und Kosinus durch Additionstheoreme
+      const wave =
+        col.waveSin * waveYCos +
+        col.waveCos * waveYSin;
 
-      const flow1 = Math.sin(col.flow1X + flow1Y);
-      const flow2 = Math.cos(col.flow2X + flow2Y);
-      const flow3 = Math.sin(col.flow3X + flow3Y);
+      const glow =
+        col.glowCos * glowYCos +
+        col.glowSin * glowYSin;
+
+      const flow1 =
+        col.flow1Sin * flow1YCos +
+        col.flow1Cos * flow1YSin;
+
+      const flow2 =
+        col.flow2Cos * flow2YCos -
+        col.flow2Sin * flow2YSin;
+
+      const flow3 =
+        col.flow3Sin * flow3YCos +
+        col.flow3Cos * flow3YSin;
 
       const organic =
-        flow1 * 0.45 + flow2 * 0.35 + flow3 * 0.20;
+        flow1 * 0.45 +
+        flow2 * 0.35 +
+        flow3 * 0.20;
 
       const color0 = lerp(
         17, 32 + wave * 18 + organic * 24, pole
       );
+
       const color1 = lerp(
         67, 131 + glow * 22 + organic * 31, pole
       );
+
       const color2 = lerp(
         89, 145 + wave * 20 + organic * 38, pole
       );
 
       const lighting =
-        (1 + 0.035 * col.lightingX * lightingY) * vignetteY;
+        (1 + 0.035 * col.lightingX * lightingY) *
+        vignetteY;
 
       const marbling =
-        Math.sin(col.flow3X + marbling1Y) * 0.47 +
-        Math.cos(col.marbling2X - marbling2Y) * 0.30 +
-        Math.sin(marbling3Y + col.cosMarbling3X) * 0.23;
+        (
+          col.flow3Sin * marbling1YCos +
+          col.flow3Cos * marbling1YSin
+        ) * 0.47 +
+
+        (
+          col.marbling2Cos * marbling2YCos +
+          col.marbling2Sin * marbling2YSin
+        ) * 0.30 +
+
+        (
+          marbling3YSin * col.marbling3ArgCos +
+          marbling3YCos * col.marbling3ArgSin
+        ) * 0.23;
 
       const reach = 0.34 + 0.10 * marbling;
+
       let greenInfluence = 0;
 
-      // Beide Farbzentren mit denselben Formeln wie bisher.
       const dot0 = clamp(
-        greenLat0 + greenLon0 * col.greenCos0, -1, 1
+        greenLat0 + greenLon0 * col.greenCos0,
+        -1,
+        1
       );
+
       const influence0 =
-        1 - smooth((Math.acos(dot0) - reach) / 1.05);
+        1 - smooth(
+          (Math.acos(dot0) - reach) / 1.05
+        );
+
       greenInfluence =
         1 - (1 - greenInfluence) * (1 - influence0);
 
       const dot1 = clamp(
-        greenLat1 + greenLon1 * col.greenCos1, -1, 1
+        greenLat1 + greenLon1 * col.greenCos1,
+        -1,
+        1
       );
+
       const influence1 =
-        1 - smooth((Math.acos(dot1) - reach) / 1.05);
+        1 - smooth(
+          (Math.acos(dot1) - reach) / 1.05
+        );
+
       greenInfluence =
         1 - (1 - greenInfluence) * (1 - influence1);
 
       const mix = clamp(
-        greenInfluence * (0.66 + 0.09 * organic), 0, 0.78
+        greenInfluence * (0.66 + 0.09 * organic),
+        0,
+        0.78
       );
 
       const j = (y * 512 + x) * 4;
+
       data[j] = clamp(
         lerp(color0, 12 + marbling * 4, mix) * lighting,
-        0, 255
+        0,
+        255
       );
+
       data[j + 1] = clamp(
         lerp(color1, 48 + marbling * 10, mix) * lighting,
-        0, 255
+        0,
+        255
       );
+
       data[j + 2] = clamp(
         lerp(color2, 34 + marbling * 6, mix) * lighting,
-        0, 255
+        0,
+        255
       );
+
       data[j + 3] = 255;
     }
   }
@@ -957,9 +1068,9 @@ function drawBackground(ctx, width, height) {
 
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = "high";
+
   ctx.drawImage(small, 0, 0, width, height);
 }
-
 /* =========================================
    ECHOES / KOMPASS / SOCIAL LINKS
 ========================================= */
