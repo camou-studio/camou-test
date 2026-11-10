@@ -1126,7 +1126,18 @@ let sensorStatusText = "KUGELSTEUERUNG";
 const fresh = (timestamp, ms = 2200) =>
   timestamp > 0 &&
   performance.now() - timestamp < ms;
+let sensorExpiryTimer = null;
 
+function camouScheduleSensorExpiry() {
+  if (sensorExpiryTimer !== null) {
+    clearTimeout(sensorExpiryTimer);
+  }
+
+  sensorExpiryTimer = setTimeout(() => {
+    sensorExpiryTimer = null;
+    camouWakeAnimation();
+  }, 2250);
+}
 function registerMotion(delta) {
   if (!Number.isFinite(delta)) return;
 
@@ -1135,8 +1146,11 @@ function registerMotion(delta) {
   );
 
   motionLastAt = performance.now();
+if (sensorOptIn) {
+  camouScheduleSensorExpiry();
+  camouWakeAnimation();
 }
-
+}
 function onOrientation(event) {
   const now = performance.now();
 
@@ -1197,8 +1211,11 @@ function onOrientation(event) {
 
   orientationPrevious = current;
   orientationLastAt = now;
+if (sensorOptIn) {
+  camouScheduleSensorExpiry();
+  camouWakeAnimation();
 }
-
+}
 window.addEventListener(
   "deviceorientation",
   onOrientation,
@@ -2810,7 +2827,7 @@ createGlobeTexture()
     globe.material.map = texture;
     globe.material.needsUpdate = true;
     sceneNeedsRender = true;
-
+camouWakeAnimation();
     console.info("CAMOU: HOME-Kugel geladen.");
 
     camouHomeReady = true;
@@ -2971,6 +2988,7 @@ function goToSection(index) {
 
   menuAnimating = true;
   sceneNeedsRender = true;
+   camouWakeAnimation();
 }
 
 navButtons.forEach(button => {
@@ -3443,6 +3461,8 @@ function setZoom(value) {
 
   camera.position.z = currentZoom;
   sceneNeedsRender = true;
+
+  camouWakeAnimation();
 }
 
 $("zoom-in")?.addEventListener(
@@ -3514,7 +3534,7 @@ stage.addEventListener(
       event.target !== renderer.domElement ||
       camouWorldFlight
     ) return;
-
+camouWakeAnimation();
     const point = texturePoint(event);
 
     // Visuals Hebel.
@@ -3912,9 +3932,13 @@ if (event.key === "ArrowDown") {
       setZoom(currentZoom + 0.7);
     }
 
-    if (event.key === "0") {
-      setZoom(defaultZoom);
-    }
+   if (event.key === "0") {
+  setZoom(defaultZoom);
+}
+
+if (event.key.startsWith("Arrow")) {
+  camouWakeAnimation();
+}
   }
 );
 
@@ -3981,11 +4005,48 @@ function camouHorizontalDirection() {
   // einer Ueberkopf-Drehung korrigieren.
   return Math.cos(tilt) < 0 ? -1 : 1;
 }
+// CAMOU: Animation nur bei Bedarf ausführen
+let camouAnimationFrameId = null;
+let camouAnimationRunning = false;
 
+function camouWakeAnimation() {
+  if (camouAnimationRunning) return;
+
+  camouAnimationRunning = true;
+
+  camouAnimationFrameId =
+    requestAnimationFrame(animate);
+}
+
+function camouAnimationShouldContinue() {
+  const hasInertia =
+    Math.abs(velocityX) > 0.00004 ||
+    Math.abs(velocityY) > 0.00004;
+
+  const compassMoving =
+    Math.abs(
+      wrapAngle(targetNeedleAngle - needleAngle)
+    ) > 0.0005;
+
+  const videoFallback =
+    homeVideoPlaying &&
+    typeof homeVideo.requestVideoFrameCallback !==
+      "function";
+
+  return (
+    isDragging ||
+    menuAnimating ||
+    !!camouWorldFlight ||
+    hasInertia ||
+    compassMoving ||
+    videoFallback
+  );
+}
 function animate(now = 0) {
-  requestAnimationFrame(animate);
 
-  if (camouWorldFlight) camouUpdateWorldFlight(now);
+  if (camouWorldFlight) {
+    camouUpdateWorldFlight(now);
+  }
 
   /* NAVIGATION – DREI PHASEN */
 
@@ -4240,9 +4301,23 @@ camouUpdateExplorePlanetSize();
   }
 
   updateIndicator();
+
+  // Nur weiterlaufen, wenn CAMOU aktiv ist
+  if (camouAnimationShouldContinue()) {
+
+    camouAnimationFrameId =
+      requestAnimationFrame(animate);
+
+  } else {
+
+    camouAnimationFrameId = null;
+    camouAnimationRunning = false;
+
+  }
 }
 
-requestAnimationFrame(animate);
+// Erster Renderdurchlauf
+camouWakeAnimation();
 
 /* =========================================
    RESIZE
@@ -4271,6 +4346,7 @@ renderer.setPixelRatio(
 );
 
   sceneNeedsRender = true;
+   camouWakeAnimation();
 }
 
 window.addEventListener(
@@ -4937,6 +5013,7 @@ refreshIsland = function(index) {
 
   texture.needsUpdate = true;
   sceneNeedsRender = true;
+   camouWakeAnimation();
 };
 
 /* =========================================
@@ -5956,6 +6033,7 @@ camouSetGlobeFlightOpacity(1);
   }
 
   sceneNeedsRender = true;
+   camouWakeAnimation();
 }
 
 function camouUpdateWorldFlight(now) {
