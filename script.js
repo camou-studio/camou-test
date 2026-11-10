@@ -374,9 +374,10 @@ const camouPlanetTexture = new THREE.TextureLoader().load(
     "./assets/camou-rocky-planet.png",
     import.meta.url
   ).href,
-  () => {
-    sceneNeedsRender = true;
-  },
+() => {
+  sceneNeedsRender = true;
+  camouWakeAnimation();
+},
   undefined,
   error => {
     console.error(
