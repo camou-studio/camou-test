@@ -824,7 +824,35 @@ function drawBackground(ctx, width, height) {
   const g = small.getContext("2d");
   const image = g.createImageData(512, 256);
   const data = image.data;
+  // CAMOU: Vorberechnete Acos-Nachschlagetabelle
+  const ACOS_LUT_SIZE = 4096;
+  const acosTable = new Float32Array(
+    ACOS_LUT_SIZE + 1
+  );
 
+  for (let i = 0; i <= ACOS_LUT_SIZE; i++) {
+    const value = 1 - 2 * i / ACOS_LUT_SIZE;
+    acosTable[i] = Math.acos(value);
+  }
+
+  function fastAcos(value) {
+    const position =
+      (1 - clamp(value, -1, 1)) *
+      0.5 * ACOS_LUT_SIZE;
+
+    const index = Math.min(
+      ACOS_LUT_SIZE - 1,
+      Math.floor(position)
+    );
+
+    const fraction = position - index;
+
+    return lerp(
+      acosTable[index],
+      acosTable[index + 1],
+      fraction
+    );
+  }
   const centers = [PLACES[2], PLACES[3]].map(p => {
     const lat = p.lat * RAD;
 
@@ -1014,9 +1042,9 @@ function drawBackground(ctx, width, height) {
       );
 
       const influence0 =
-        1 - smooth(
-          (Math.acos(dot0) - reach) / 1.05
-        );
+  1 - smooth(
+    (fastAcos(dot0) - reach) / 1.05
+  );
 
       greenInfluence =
         1 - (1 - greenInfluence) * (1 - influence0);
@@ -1027,10 +1055,10 @@ function drawBackground(ctx, width, height) {
         1
       );
 
-      const influence1 =
-        1 - smooth(
-          (Math.acos(dot1) - reach) / 1.05
-        );
+const influence1 =
+  1 - smooth(
+    (fastAcos(dot1) - reach) / 1.05
+  );
 
       greenInfluence =
         1 - (1 - greenInfluence) * (1 - influence1);
