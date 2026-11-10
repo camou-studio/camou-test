@@ -5235,6 +5235,7 @@ function camouCreatePortal() {
 ========================================= */
 
 
+
 async function camouCreateRockyWorldTexture() {
   const width = mobile ? 512 : 768;
   const height = width / 2;
@@ -5297,31 +5298,19 @@ async function camouCreateRockyWorldTexture() {
     return mix(layer(0), layer(1), fz);
   }
 
-  // Echte 3D-Koordinaten verhindern
-  // sternfoermige Muster an den Polen.
+  // Bild zeilenweise berechnen
   for (let y = 0; y < height; y++) {
 
-  // Bestehende Berechnung der Bildzeile
-  // ...
+    const lat =
+      Math.PI * (
+        0.5 - (y + 0.5) / height
+      );
 
-  for (let x = 0; x < width; x++) {
-
-    // Deine bisherige vollständige
-    // Pixelberechnung bleibt hier stehen.
-
-  }
-
-  // Neue Zeitaufteilung
-  if ((y & 7) === 7) {
-    await new Promise(resolve =>
-      setTimeout(resolve, 0)
-    );
-  }
-}
     const cy = Math.sin(lat);
     const cr = Math.cos(lat);
 
     for (let x = 0; x < width; x++) {
+
       const lon =
         2 * Math.PI * (
           (x + 0.5) / width
@@ -5357,7 +5346,6 @@ async function camouCreateRockyWorldTexture() {
       const relief =
         (mineral - 0.5) * 75;
 
-      // Lavendelgraue, mineralische Oberflaeche.
       const light = Math.max(
         0,
         nx * -0.48 +
@@ -5394,13 +5382,18 @@ async function camouCreateRockyWorldTexture() {
 
       image.data[i + 3] = 255;
     }
+
+    // Alle 8 Zeilen kurz an den Browser abgeben
+    if ((y & 7) === 7) {
+      await new Promise(resolve =>
+        setTimeout(resolve, 0)
+      );
+    }
   }
 
   ctx.putImageData(image, 0, 0);
 
-  const texture = new THREE.CanvasTexture(
-    canvas
-  );
+  const texture = new THREE.CanvasTexture(canvas);
 
   texture.colorSpace = THREE.SRGBColorSpace;
   texture.wrapS = THREE.RepeatWrapping;
@@ -5413,7 +5406,6 @@ async function camouCreateRockyWorldTexture() {
 
   return texture;
 }
-
 
 /* =========================================
    INHALT DES ZWEITEN PROJEKTS
