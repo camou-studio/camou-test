@@ -243,131 +243,6 @@ camera.add(camouSun);
    CAMOU – MINERALISCHER PLANET
 ========================================= */
 
-
-function createRockyPlanetTexture() {
-  const size = 256;
-
-  const canvas = document.createElement("canvas");
-  canvas.width = size;
-  canvas.height = size;
-
-  const ctx = canvas.getContext("2d");
-  const image = ctx.createImageData(size, size);
-  const data = image.data;
-
-  // Der urspruengliche reproduzierbare Rauschalgorithmus.
-  const hash = (x, y) => {
-    let n =
-      Math.imul(x, 374761393) + Math.imul(y, 668265263);
-    n = Math.imul(n ^ (n >>> 13), 1274126177);
-    return ((n ^ (n >>> 16)) >>> 0) / 4294967295;
-  };
-
-  const noise = (x, y) => {
-    const ix = Math.floor(x);
-    const iy = Math.floor(y);
-    const fx = x - ix;
-    const fy = y - iy;
-    const sx = fx * fx * (3 - 2 * fx);
-    const sy = fy * fy * (3 - 2 * fy);
-
-    const a =
-      hash(ix, iy) * (1 - sx) + hash(ix + 1, iy) * sx;
-    const b =
-      hash(ix, iy + 1) * (1 - sx) +
-      hash(ix + 1, iy + 1) * sx;
-
-    return a * (1 - sy) + b * sy;
-  };
-
-  const lx = -0.48;
-  const ly = 0.58;
-  const lz = Math.sqrt(1 - lx * lx - ly * ly);
-
-  // Ortskoordinaten einmal je Spalte beziehungsweise Zeile.
-  const coordsX = new Float64Array(size);
-  const coordsY = new Float64Array(size);
-  for (let x = 0; x < size; x++) {
-    coordsX[x] = (x + 0.5 - size / 2) / (size * 0.445);
-  }
-  for (let y = 0; y < size; y++) {
-    coordsY[y] = (size / 2 - y - 0.5) / (size * 0.445);
-  }
-
-  for (let y = 0; y < size; y++) {
-    const ny = coordsY[y];
-
-    for (let x = 0; x < size; x++) {
-      const nx = coordsX[x];
-      const r2 = nx * nx + ny * ny;
-      const i = (y * size + x) * 4;
-
-      if (r2 >= 1) continue;
-
-      const nz = Math.sqrt(1 - r2);
-      const light = Math.max(0, nx * lx + ny * ly + nz * lz);
-      const shade = 0.28 + 0.72 * light;
-
-      const warp = noise(nx * 3.1 + 13, ny * 3.1 + 7) - 0.5;
-      const u = nx + warp * 0.17;
-      const v = ny - warp * 0.13;
-
-      const large = noise(u * 5.2 + 27, v * 5.2 + 11);
-      const medium = noise(u * 13.7 + 5, v * 13.7 + 19);
-      const fine = noise(u * 31.3 + 21, v * 31.3 + 31);
-
-      const mineral =
-        0.58 * large + 0.30 * medium + 0.12 * fine;
-      const relief = (mineral - 0.5) * 43;
-
-      const radius = Math.sqrt(r2);
-      const rimLight =
-        Math.pow(1 - nz, 5) *
-        Math.max(0, nx * -0.55 + ny * 0.80) * 0.16;
-      const vignette =
-        1 - 0.12 * Math.pow(radius, 3) + rimLight;
-
-      data[i] = Math.max(
-        0,
-        Math.min(
-          255,
-          Math.round(
-            (106 + relief + (medium - 0.5) * 11) *
-            shade * vignette
-          )
-        )
-      );
-      data[i + 1] = Math.max(
-        0,
-        Math.min(
-          255,
-          Math.round(
-            (109 + relief * 0.88) * shade * vignette
-          )
-        )
-      );
-      data[i + 2] = Math.max(
-        0,
-        Math.min(
-          255,
-          Math.round(
-            (133 + relief * 1.12 + (large - 0.5) * 12) *
-            shade * vignette
-          )
-        )
-      );
-
-      const edge = Math.min(1, (1 - radius) * 110);
-      data[i + 3] = Math.round(255 * edge);
-    }
-  }
-
-  ctx.putImageData(image, 0, 0);
-  const texture = new THREE.CanvasTexture(canvas);
-  texture.colorSpace = THREE.SRGBColorSpace;
-  return texture;
-}
-
 // CAMOU: Vorberechnete Gesteinsplanet-Textur laden
 const camouPlanetTexture = new THREE.TextureLoader().load(
   new URL(
@@ -489,7 +364,9 @@ scene.add(globeGroup);
 
 const globe = new THREE.Mesh(
   new THREE.SphereGeometry(
-    CONFIG.radius, 160, 112
+    CONFIG.radius,
+    mobile ? 96 : 128,
+    mobile ? 64 : 88
   ),
   new THREE.MeshStandardMaterial({
     color: 0xffffff,
@@ -501,9 +378,11 @@ const globe = new THREE.Mesh(
 globeGroup.add(globe);
 
 const atmosphere = new THREE.Mesh(
-  new THREE.SphereGeometry(
-    CONFIG.radius * 1.012, 96, 64
-  ),
+new THREE.SphereGeometry(
+  CONFIG.radius * 1.012,
+  mobile ? 48 : 64,
+  mobile ? 32 : 40
+),
   new THREE.MeshBasicMaterial({
     color: 0xa9bd9f,
     transparent: true,
@@ -4062,10 +3941,14 @@ function camouAnimationShouldContinue() {
     typeof homeVideo.requestVideoFrameCallback !==
       "function";
 
+  const waitingForPlanetAssets =
+    camouWorldFlight?.phase === "prepare" &&
+    !camouWorldFlight.ready;
+
   return (
     isDragging ||
     menuAnimating ||
-    !!camouWorldFlight ||
+    (!!camouWorldFlight && !waitingForPlanetAssets) ||
     hasInertia ||
     compassMoving ||
     videoFallback
@@ -5994,12 +5877,13 @@ function camouFlyToWorld(world, sectionIndex = 0) {
 
     // Auch der erste Besuch verwendet
     // dieselbe fertige Projektoberflaeche.
-    camouEnsureSecondPlanet()
-      .then(() => {
-        if (camouWorldFlight === flight) {
-          flight.ready = true;
-        }
-      })
+camouEnsureSecondPlanet()
+  .then(() => {
+    if (camouWorldFlight === flight) {
+      flight.ready = true;
+      camouWakeAnimation();
+    }
+  })
       .catch(error => {
         console.error(
           "CAMOU Projektplanet:",
