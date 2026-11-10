@@ -696,13 +696,19 @@ function playButton(ctx, x, y) {
 ========================================= */
 
 function drawBackground(ctx, width, height) {
-  const small = document.createElement("canvas");
-  small.width = 512;
-  small.height = 256;
+  // Kleinere interne Auflösung für die Hintergrundberechnung.
+// Die fertige Textur wird anschliessend hochskaliert.
+const BG_W = 384;
+const BG_H = 192;
 
-  const g = small.getContext("2d");
-  const image = g.createImageData(512, 256);
-  const data = image.data;
+const small = document.createElement("canvas");
+small.width = BG_W;
+small.height = BG_H;
+
+const g = small.getContext("2d");
+const image = g.createImageData(BG_W, BG_H);
+const data = image.data;
+   
   // CAMOU: Vorberechnete Acos-Nachschlagetabelle
   const ACOS_LUT_SIZE = 4096;
   const acosTable = new Float32Array(
@@ -743,8 +749,8 @@ function drawBackground(ctx, width, height) {
   });
 
   // X-Werte einmalig vorberechnen
-  const columns = Array.from({ length: 512 }, (_, x) => {
-    const u = x / 512;
+  const columns = Array.from({ length: BG_W }, (_, x) => {
+  const u = x / BG_W;
     const lon = (u - 0.25) * Math.PI * 2;
 
     const waveX = u * Math.PI * 2;
@@ -789,8 +795,8 @@ function drawBackground(ctx, width, height) {
   });
 
   // Y-Werte einmalig pro Zeile vorberechnen
-  for (let y = 0; y < 256; y++) {
-    const v = y / 255;
+  for (let y = 0; y < BG_H; y++) {
+  const v = y / (BG_H - 1);
 
     const lat = (0.5 - v) * Math.PI;
     const sinLat = Math.sin(lat);
@@ -849,7 +855,7 @@ function drawBackground(ctx, width, height) {
     const greenLon1 = cosLat * centers[1].cosLat;
 
     // Pixelberechnung
-    for (let x = 0; x < 512; x++) {
+    for (let x = 0; x < BG_W; x++) {
       const col = columns[x];
 
       // Sinus und Kosinus durch Additionstheoreme
@@ -948,7 +954,7 @@ const influence1 =
         0.78
       );
 
-      const j = (y * 512 + x) * 4;
+      const j = (y * BG_W + x) * 4;
 
       data[j] = clamp(
         lerp(color0, 12 + marbling * 4, mix) * lighting,
@@ -5229,7 +5235,7 @@ function camouCreatePortal() {
 ========================================= */
 
 
-function camouCreateRockyWorldTexture() {
+async function camouCreateRockyWorldTexture() {
   const width = mobile ? 512 : 768;
   const height = width / 2;
 
@@ -5294,11 +5300,24 @@ function camouCreateRockyWorldTexture() {
   // Echte 3D-Koordinaten verhindern
   // sternfoermige Muster an den Polen.
   for (let y = 0; y < height; y++) {
-    const lat =
-      Math.PI * (
-        0.5 - (y + 0.5) / height
-      );
 
+  // Bestehende Berechnung der Bildzeile
+  // ...
+
+  for (let x = 0; x < width; x++) {
+
+    // Deine bisherige vollständige
+    // Pixelberechnung bleibt hier stehen.
+
+  }
+
+  // Neue Zeitaufteilung
+  if ((y & 7) === 7) {
+    await new Promise(resolve =>
+      setTimeout(resolve, 0)
+    );
+  }
+}
     const cy = Math.sin(lat);
     const cr = Math.cos(lat);
 
@@ -5495,10 +5514,13 @@ function camouEnsureSecondPlanet() {
     return camouSecondPlanetReady;
   }
 
-  camouSecondPlanetReady =
-    Promise.resolve().then(() => {
-      const group = new THREE.Group();
+camouSecondPlanetReady =
+  Promise.resolve().then(async () => {
+    const group = new THREE.Group();
 
+    // Gesteinstextur abschnittsweise erstellen.
+    const rockyTexture =
+      await camouCreateRockyWorldTexture();
 
 const sphere = new THREE.Mesh(
   new THREE.SphereGeometry(
@@ -5507,7 +5529,7 @@ const sphere = new THREE.Mesh(
     mobile ? 48 : 64
   ),
   new THREE.MeshBasicMaterial({
-    map: camouCreateRockyWorldTexture(),
+    map: rockyTexture,
 
     // Echte, undurchsichtige 3D-Oberflaeche.
     transparent: false,
