@@ -332,7 +332,7 @@ a {
 
 /* MOBILE */
 
-@media (max-width: 700px) {
+@media (max-width: 700px) and (hover: none) and (pointer: coarse) { 
 
   .topbar {
     height: 82px;
