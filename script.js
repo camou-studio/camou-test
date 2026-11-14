@@ -119,7 +119,7 @@ const navButtons = [
 ];
 
 const mobile = window.matchMedia(
-  "(max-width:700px)"
+  "(hover: none) and (pointer: coarse)"
 ).matches;
 
 const defaultZoom = mobile
