@@ -102,6 +102,27 @@ const smooth = t => {
   return t * t * (3 - 2 * t);
 };
 
+// Schnelle Arcus-Cosinus-Näherung
+// Maximaler Fehler ca. 0.000068 Radiant.
+function fastAcos(x) {
+  x = clamp(x, -1, 1);
+
+  const a = Math.abs(x);
+
+  const result =
+    (
+      (
+        (
+          -0.0187293 * a + 0.0742610
+        ) * a - 0.2121144
+      ) * a + 1.5707288
+    ) * Math.sqrt(1 - a);
+
+  return x >= 0
+    ? result
+    : Math.PI - result;
+}
+
 const wrapAngle = a =>
   Math.atan2(Math.sin(a), Math.cos(a));
 
@@ -908,7 +929,7 @@ function drawBackground(ctx, width, height) {
         greenLat0 + greenLon0 * col.greenCos0, -1, 1
       );
       const influence0 =
-        1 - smooth((Math.acos(dot0) - reach) / 1.05);
+        1 - smooth((fastAcos(dot0) - reach) / 1.05);
       greenInfluence =
         1 - (1 - greenInfluence) * (1 - influence0);
 
@@ -916,7 +937,7 @@ function drawBackground(ctx, width, height) {
         greenLat1 + greenLon1 * col.greenCos1, -1, 1
       );
       const influence1 =
-        1 - smooth((Math.acos(dot1) - reach) / 1.05);
+        1 - smooth((fastAcos(dot1) - reach) / 1.05);
       greenInfluence =
         1 - (1 - greenInfluence) * (1 - influence1);
 
