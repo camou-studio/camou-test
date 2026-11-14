@@ -992,7 +992,7 @@ const SOCIAL = [
   {
     name: "INSTAGRAM",
     angle: Math.PI,
-    url: "https://www.instagram.com/b3nn3t"
+    url: "https://www.instagram.com/b333nn3t"
   }
 ];
 
