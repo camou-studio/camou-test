@@ -36,8 +36,8 @@ const sections = [
   {
     name: "HOME",
     eyebrow: "01 — NEW PROJECT",
-    title: ["c a m o u"],
-    body: ["Gleiche Fragen.", "Neue Perspektiven."],
+    title: ["c a m O u"],
+    body: ["Gleiche Fragen.", "Neuer Cosmos."],
     image: ASSETS.home
   },
   {
@@ -243,26 +243,132 @@ camera.add(camouSun);
    CAMOU – MINERALISCHER PLANET
 ========================================= */
 
-// CAMOU: Vorberechnete Gesteinsplanet-Textur laden
-const camouPlanetTexture = new THREE.TextureLoader().load(
-  new URL(
-    "./assets/camou-rocky-planet.png",
-    import.meta.url
-  ).href,
-() => {
-  sceneNeedsRender = true;
-  camouWakeAnimation();
-},
-  undefined,
-  error => {
-    console.error(
-      "CAMOU: Planetentextur konnte nicht geladen werden",
-      error
-    );
-  }
-);
 
-camouPlanetTexture.colorSpace = THREE.SRGBColorSpace;
+function createRockyPlanetTexture() {
+  const size = 256;
+
+  const canvas = document.createElement("canvas");
+  canvas.width = size;
+  canvas.height = size;
+
+  const ctx = canvas.getContext("2d");
+  const image = ctx.createImageData(size, size);
+  const data = image.data;
+
+  // Der urspruengliche reproduzierbare Rauschalgorithmus.
+  const hash = (x, y) => {
+    let n =
+      Math.imul(x, 374761393) + Math.imul(y, 668265263);
+    n = Math.imul(n ^ (n >>> 13), 1274126177);
+    return ((n ^ (n >>> 16)) >>> 0) / 4294967295;
+  };
+
+  const noise = (x, y) => {
+    const ix = Math.floor(x);
+    const iy = Math.floor(y);
+    const fx = x - ix;
+    const fy = y - iy;
+    const sx = fx * fx * (3 - 2 * fx);
+    const sy = fy * fy * (3 - 2 * fy);
+
+    const a =
+      hash(ix, iy) * (1 - sx) + hash(ix + 1, iy) * sx;
+    const b =
+      hash(ix, iy + 1) * (1 - sx) +
+      hash(ix + 1, iy + 1) * sx;
+
+    return a * (1 - sy) + b * sy;
+  };
+
+  const lx = -0.48;
+  const ly = 0.58;
+  const lz = Math.sqrt(1 - lx * lx - ly * ly);
+
+  // Ortskoordinaten einmal je Spalte beziehungsweise Zeile.
+  const coordsX = new Float64Array(size);
+  const coordsY = new Float64Array(size);
+  for (let x = 0; x < size; x++) {
+    coordsX[x] = (x + 0.5 - size / 2) / (size * 0.445);
+  }
+  for (let y = 0; y < size; y++) {
+    coordsY[y] = (size / 2 - y - 0.5) / (size * 0.445);
+  }
+
+  for (let y = 0; y < size; y++) {
+    const ny = coordsY[y];
+
+    for (let x = 0; x < size; x++) {
+      const nx = coordsX[x];
+      const r2 = nx * nx + ny * ny;
+      const i = (y * size + x) * 4;
+
+      if (r2 >= 1) continue;
+
+      const nz = Math.sqrt(1 - r2);
+      const light = Math.max(0, nx * lx + ny * ly + nz * lz);
+      const shade = 0.28 + 0.72 * light;
+
+      const warp = noise(nx * 3.1 + 13, ny * 3.1 + 7) - 0.5;
+      const u = nx + warp * 0.17;
+      const v = ny - warp * 0.13;
+
+      const large = noise(u * 5.2 + 27, v * 5.2 + 11);
+      const medium = noise(u * 13.7 + 5, v * 13.7 + 19);
+      const fine = noise(u * 31.3 + 21, v * 31.3 + 31);
+
+      const mineral =
+        0.58 * large + 0.30 * medium + 0.12 * fine;
+      const relief = (mineral - 0.5) * 43;
+
+      const radius = Math.sqrt(r2);
+      const rimLight =
+        Math.pow(1 - nz, 5) *
+        Math.max(0, nx * -0.55 + ny * 0.80) * 0.16;
+      const vignette =
+        1 - 0.12 * Math.pow(radius, 3) + rimLight;
+
+      data[i] = Math.max(
+        0,
+        Math.min(
+          255,
+          Math.round(
+            (106 + relief + (medium - 0.5) * 11) *
+            shade * vignette
+          )
+        )
+      );
+      data[i + 1] = Math.max(
+        0,
+        Math.min(
+          255,
+          Math.round(
+            (109 + relief * 0.88) * shade * vignette
+          )
+        )
+      );
+      data[i + 2] = Math.max(
+        0,
+        Math.min(
+          255,
+          Math.round(
+            (133 + relief * 1.12 + (large - 0.5) * 12) *
+            shade * vignette
+          )
+        )
+      );
+
+      const edge = Math.min(1, (1 - radius) * 110);
+      data[i + 3] = Math.round(255 * edge);
+    }
+  }
+
+  ctx.putImageData(image, 0, 0);
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  return texture;
+}
+
+const camouPlanetTexture = createRockyPlanetTexture();
 
 const camouPlanet = new THREE.Sprite(
   new THREE.SpriteMaterial({
@@ -274,7 +380,7 @@ const camouPlanet = new THREE.Sprite(
   })
 );
 
-// Ursprüngliche Position und Grösse beibehalten
+// Position wird abhängig vom Bildschirm berechnet
 camouPlanet.position.set(-8, -4.5, -25);
 camouPlanet.scale.set(2.2, 2.2, 1);
 
@@ -285,12 +391,17 @@ camera.add(camouPlanet);
    CAMOU COSMOS
    RESPONSIVE HIMMELSKOERPER
 ========================================= */
+
 function updateCosmosPositions() {
+
   const portrait =
     window.innerWidth <= 700 &&
     window.innerHeight > window.innerWidth;
 
   if (portrait) {
+
+    // Sichtbaren Kameraausschnitt in der
+    // Entfernung der Hintergrundobjekte berechnen.
     const depth = 25;
 
     const halfHeight =
@@ -301,34 +412,35 @@ function updateCosmosPositions() {
     const halfWidth =
       halfHeight * camera.aspect;
 
-    // Sonne rechts oben
-    camouSun.position.set(
-      halfWidth * 0.65,
-      halfHeight * 0.94,
-      -depth
-    );
+    // Sonne rechts oben, ausserhalb der Kugel
+camouSun.position.set(
+  halfWidth * 0.65,
+  halfHeight * 0.94,
+  -depth
+);
 
-    camouSun.scale.set(
-      halfWidth * 0.85,
-      halfWidth * 0.85,
-      1
-    );
+camouSun.scale.set(
+  halfWidth * 0.85,
+  halfWidth * 0.85,
+  1
+);
 
-    // Planet links unten
-    camouPlanet.position.set(
-      -halfWidth * 0.65,
-      -halfHeight * 0.94,
-      -depth
-    );
+// Planet links unten, ausserhalb der Kugel
+camouPlanet.position.set(
+  -halfWidth * 0.65,
+  -halfHeight * 0.94,
+  -depth
+);
 
-    camouPlanet.scale.set(
-      halfWidth * 0.45,
-      halfWidth * 0.45,
-      1
-    );
+camouPlanet.scale.set(
+  halfWidth * 0.45,
+  halfWidth * 0.45,
+  1
+);
 
   } else {
-    // Desktop-Darstellung
+
+    // Bisherige Desktop-Darstellung
     camouSun.position.set(8, 5, -25);
     camouSun.scale.set(7, 7, 1);
 
@@ -364,9 +476,7 @@ scene.add(globeGroup);
 
 const globe = new THREE.Mesh(
   new THREE.SphereGeometry(
-    CONFIG.radius,
-    mobile ? 96 : 128,
-    mobile ? 64 : 88
+    CONFIG.radius, 160, 112
   ),
   new THREE.MeshStandardMaterial({
     color: 0xffffff,
@@ -378,11 +488,9 @@ const globe = new THREE.Mesh(
 globeGroup.add(globe);
 
 const atmosphere = new THREE.Mesh(
-new THREE.SphereGeometry(
-  CONFIG.radius * 1.012,
-  mobile ? 48 : 64,
-  mobile ? 32 : 40
-),
+  new THREE.SphereGeometry(
+    CONFIG.radius * 1.012, 96, 64
+  ),
   new THREE.MeshBasicMaterial({
     color: 0xa9bd9f,
     transparent: true,
@@ -695,52 +803,19 @@ function playButton(ctx, x, y) {
    ORGANISCHER HINTERGRUND
 ========================================= */
 
+
 function drawBackground(ctx, width, height) {
-  // Kleinere interne Auflösung für die Hintergrundberechnung.
-// Die fertige Textur wird anschliessend hochskaliert.
-const BG_W = 384;
-const BG_H = 192;
+  const small = document.createElement("canvas");
+  small.width = 512;
+  small.height = 256;
 
-const small = document.createElement("canvas");
-small.width = BG_W;
-small.height = BG_H;
+  const g = small.getContext("2d");
+  const image = g.createImageData(512, 256);
+  const data = image.data;
 
-const g = small.getContext("2d");
-const image = g.createImageData(BG_W, BG_H);
-const data = image.data;
-   
-  // CAMOU: Vorberechnete Acos-Nachschlagetabelle
-  const ACOS_LUT_SIZE = 4096;
-  const acosTable = new Float32Array(
-    ACOS_LUT_SIZE + 1
-  );
-
-  for (let i = 0; i <= ACOS_LUT_SIZE; i++) {
-    const value = 1 - 2 * i / ACOS_LUT_SIZE;
-    acosTable[i] = Math.acos(value);
-  }
-
-  function fastAcos(value) {
-    const position =
-      (1 - clamp(value, -1, 1)) *
-      0.5 * ACOS_LUT_SIZE;
-
-    const index = Math.min(
-      ACOS_LUT_SIZE - 1,
-      Math.floor(position)
-    );
-
-    const fraction = position - index;
-
-    return lerp(
-      acosTable[index],
-      acosTable[index + 1],
-      fraction
-    );
-  }
+  // Die Positionen stammen unveraendert aus VISUALS und ECHOES.
   const centers = [PLACES[2], PLACES[3]].map(p => {
     const lat = p.lat * RAD;
-
     return {
       sinLat: Math.sin(lat),
       cosLat: Math.cos(lat),
@@ -748,232 +823,120 @@ const data = image.data;
     };
   });
 
-  // X-Werte einmalig vorberechnen
-  const columns = Array.from({ length: BG_W }, (_, x) => {
-  const u = x / BG_W;
+  // Ausschliesslich von x abhaengige Werte einmal berechnen.
+  const columns = Array.from({ length: 512 }, (_, x) => {
+    const u = x / 512;
     const lon = (u - 0.25) * Math.PI * 2;
 
-    const waveX = u * Math.PI * 2;
-    const glowX = u * Math.PI * 4;
-    const flow1X = u * Math.PI * 6;
-    const flow2X = u * Math.PI * 4;
-    const flow3X = u * Math.PI * 8;
-    const marbling2X = u * Math.PI * 12;
-
-    const marbling3Angle =
-      Math.cos(u * Math.PI * 6);
-
     return {
-      waveSin: Math.sin(waveX),
-      waveCos: Math.cos(waveX),
-
-      glowSin: Math.sin(glowX),
-      glowCos: Math.cos(glowX),
-
-      flow1Sin: Math.sin(flow1X),
-      flow1Cos: Math.cos(flow1X),
-
-      flow2Sin: Math.sin(flow2X),
-      flow2Cos: Math.cos(flow2X),
-
-      flow3Sin: Math.sin(flow3X),
-      flow3Cos: Math.cos(flow3X),
-
-      marbling2Sin: Math.sin(marbling2X),
-      marbling2Cos: Math.cos(marbling2X),
-
-      marbling3ArgSin: Math.sin(marbling3Angle),
-      marbling3ArgCos: Math.cos(marbling3Angle),
-
-      lightingX: Math.cos(
-        2 * Math.PI * (u - 0.25)
-      ),
-
+      waveX: u * Math.PI * 2,
+      glowX: u * Math.PI * 4,
+      flow1X: u * Math.PI * 6,
+      flow2X: u * Math.PI * 4,
+      flow3X: u * Math.PI * 8,
+      marbling2X: u * Math.PI * 12,
+      cosMarbling3X: Math.cos(u * Math.PI * 6),
+      lightingX: Math.cos(2 * Math.PI * (u - 0.25)),
       greenCos0: Math.cos(lon - centers[0].lon),
       greenCos1: Math.cos(lon - centers[1].lon)
     };
   });
 
-  // Y-Werte einmalig pro Zeile vorberechnen
-  for (let y = 0; y < BG_H; y++) {
-  const v = y / (BG_H - 1);
-
+  for (let y = 0; y < 256; y++) {
+    const v = y / 255;
     const lat = (0.5 - v) * Math.PI;
     const sinLat = Math.sin(lat);
     const cosLat = Math.cos(lat);
 
+    // Ausschliesslich von y abhaengige Werte einmal pro Zeile.
     const pole = smooth(
       Math.min(1, Math.min(v, 1 - v) / 0.24)
     );
-
     const flow1Y = Math.sin(v * Math.PI * 4) * 1.8;
     const flow2Y = Math.sin(v * Math.PI * 6) * 1.5;
     const flow3Y = Math.cos(v * Math.PI * 5);
-
     const waveY = v * 2.2;
     const glowY = v * 3.1;
-
-    const marbling1Y =
-      Math.sin(v * Math.PI * 4) * 1.4;
-
+    const marbling1Y = Math.sin(v * Math.PI * 4) * 1.4;
     const marbling2Y = v * Math.PI * 5;
     const marbling3Y = v * Math.PI * 7;
-
-    const waveYSin = Math.sin(waveY);
-    const waveYCos = Math.cos(waveY);
-
-    const glowYSin = Math.sin(glowY);
-    const glowYCos = Math.cos(glowY);
-
-    const flow1YSin = Math.sin(flow1Y);
-    const flow1YCos = Math.cos(flow1Y);
-
-    const flow2YSin = Math.sin(flow2Y);
-    const flow2YCos = Math.cos(flow2Y);
-
-    const flow3YSin = Math.sin(flow3Y);
-    const flow3YCos = Math.cos(flow3Y);
-
-    const marbling1YSin = Math.sin(marbling1Y);
-    const marbling1YCos = Math.cos(marbling1Y);
-
-    const marbling2YSin = Math.sin(marbling2Y);
-    const marbling2YCos = Math.cos(marbling2Y);
-
-    const marbling3YSin = Math.sin(marbling3Y);
-    const marbling3YCos = Math.cos(marbling3Y);
-
     const lightingY = Math.sin(Math.PI * v);
-
     const vignetteY =
       1 - 0.07 * Math.pow(Math.abs(v - 0.5) * 2, 2);
 
     const greenLat0 = sinLat * centers[0].sinLat;
     const greenLon0 = cosLat * centers[0].cosLat;
-
     const greenLat1 = sinLat * centers[1].sinLat;
     const greenLon1 = cosLat * centers[1].cosLat;
 
-    // Pixelberechnung
-    for (let x = 0; x < BG_W; x++) {
+    for (let x = 0; x < 512; x++) {
       const col = columns[x];
 
-      // Sinus und Kosinus durch Additionstheoreme
-      const wave =
-        col.waveSin * waveYCos +
-        col.waveCos * waveYSin;
+      const wave = Math.sin(col.waveX + waveY);
+      const glow = Math.cos(col.glowX - glowY);
 
-      const glow =
-        col.glowCos * glowYCos +
-        col.glowSin * glowYSin;
-
-      const flow1 =
-        col.flow1Sin * flow1YCos +
-        col.flow1Cos * flow1YSin;
-
-      const flow2 =
-        col.flow2Cos * flow2YCos -
-        col.flow2Sin * flow2YSin;
-
-      const flow3 =
-        col.flow3Sin * flow3YCos +
-        col.flow3Cos * flow3YSin;
+      const flow1 = Math.sin(col.flow1X + flow1Y);
+      const flow2 = Math.cos(col.flow2X + flow2Y);
+      const flow3 = Math.sin(col.flow3X + flow3Y);
 
       const organic =
-        flow1 * 0.45 +
-        flow2 * 0.35 +
-        flow3 * 0.20;
+        flow1 * 0.45 + flow2 * 0.35 + flow3 * 0.20;
 
       const color0 = lerp(
         17, 32 + wave * 18 + organic * 24, pole
       );
-
       const color1 = lerp(
         67, 131 + glow * 22 + organic * 31, pole
       );
-
       const color2 = lerp(
         89, 145 + wave * 20 + organic * 38, pole
       );
 
       const lighting =
-        (1 + 0.035 * col.lightingX * lightingY) *
-        vignetteY;
+        (1 + 0.035 * col.lightingX * lightingY) * vignetteY;
 
       const marbling =
-        (
-          col.flow3Sin * marbling1YCos +
-          col.flow3Cos * marbling1YSin
-        ) * 0.47 +
-
-        (
-          col.marbling2Cos * marbling2YCos +
-          col.marbling2Sin * marbling2YSin
-        ) * 0.30 +
-
-        (
-          marbling3YSin * col.marbling3ArgCos +
-          marbling3YCos * col.marbling3ArgSin
-        ) * 0.23;
+        Math.sin(col.flow3X + marbling1Y) * 0.47 +
+        Math.cos(col.marbling2X - marbling2Y) * 0.30 +
+        Math.sin(marbling3Y + col.cosMarbling3X) * 0.23;
 
       const reach = 0.34 + 0.10 * marbling;
-
       let greenInfluence = 0;
 
+      // Beide Farbzentren mit denselben Formeln wie bisher.
       const dot0 = clamp(
-        greenLat0 + greenLon0 * col.greenCos0,
-        -1,
-        1
+        greenLat0 + greenLon0 * col.greenCos0, -1, 1
       );
-
       const influence0 =
-  1 - smooth(
-    (fastAcos(dot0) - reach) / 1.05
-  );
-
+        1 - smooth((Math.acos(dot0) - reach) / 1.05);
       greenInfluence =
         1 - (1 - greenInfluence) * (1 - influence0);
 
       const dot1 = clamp(
-        greenLat1 + greenLon1 * col.greenCos1,
-        -1,
-        1
+        greenLat1 + greenLon1 * col.greenCos1, -1, 1
       );
-
-const influence1 =
-  1 - smooth(
-    (fastAcos(dot1) - reach) / 1.05
-  );
-
+      const influence1 =
+        1 - smooth((Math.acos(dot1) - reach) / 1.05);
       greenInfluence =
         1 - (1 - greenInfluence) * (1 - influence1);
 
       const mix = clamp(
-        greenInfluence * (0.66 + 0.09 * organic),
-        0,
-        0.78
+        greenInfluence * (0.66 + 0.09 * organic), 0, 0.78
       );
 
-      const j = (y * BG_W + x) * 4;
-
+      const j = (y * 512 + x) * 4;
       data[j] = clamp(
         lerp(color0, 12 + marbling * 4, mix) * lighting,
-        0,
-        255
+        0, 255
       );
-
       data[j + 1] = clamp(
         lerp(color1, 48 + marbling * 10, mix) * lighting,
-        0,
-        255
+        0, 255
       );
-
       data[j + 2] = clamp(
         lerp(color2, 34 + marbling * 6, mix) * lighting,
-        0,
-        255
+        0, 255
       );
-
       data[j + 3] = 255;
     }
   }
@@ -982,9 +945,9 @@ const influence1 =
 
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = "high";
-
   ctx.drawImage(small, 0, 0, width, height);
 }
+
 /* =========================================
    ECHOES / KOMPASS / SOCIAL LINKS
 ========================================= */
@@ -1040,18 +1003,7 @@ let sensorStatusText = "KUGELSTEUERUNG";
 const fresh = (timestamp, ms = 2200) =>
   timestamp > 0 &&
   performance.now() - timestamp < ms;
-let sensorExpiryTimer = null;
 
-function camouScheduleSensorExpiry() {
-  if (sensorExpiryTimer !== null) {
-    clearTimeout(sensorExpiryTimer);
-  }
-
-  sensorExpiryTimer = setTimeout(() => {
-    sensorExpiryTimer = null;
-    camouWakeAnimation();
-  }, 2250);
-}
 function registerMotion(delta) {
   if (!Number.isFinite(delta)) return;
 
@@ -1060,11 +1012,8 @@ function registerMotion(delta) {
   );
 
   motionLastAt = performance.now();
-if (sensorOptIn) {
-  camouScheduleSensorExpiry();
-  camouWakeAnimation();
 }
-}
+
 function onOrientation(event) {
   const now = performance.now();
 
@@ -1125,11 +1074,8 @@ function onOrientation(event) {
 
   orientationPrevious = current;
   orientationLastAt = now;
-if (sensorOptIn) {
-  camouScheduleSensorExpiry();
-  camouWakeAnimation();
 }
-}
+
 window.addEventListener(
   "deviceorientation",
   onOrientation,
@@ -2741,7 +2687,7 @@ createGlobeTexture()
     globe.material.map = texture;
     globe.material.needsUpdate = true;
     sceneNeedsRender = true;
-camouWakeAnimation();
+
     console.info("CAMOU: HOME-Kugel geladen.");
 
     camouHomeReady = true;
@@ -2902,7 +2848,6 @@ function goToSection(index) {
 
   menuAnimating = true;
   sceneNeedsRender = true;
-   camouWakeAnimation();
 }
 
 navButtons.forEach(button => {
@@ -3375,8 +3320,6 @@ function setZoom(value) {
 
   camera.position.z = currentZoom;
   sceneNeedsRender = true;
-
-  camouWakeAnimation();
 }
 
 $("zoom-in")?.addEventListener(
@@ -3448,7 +3391,7 @@ stage.addEventListener(
       event.target !== renderer.domElement ||
       camouWorldFlight
     ) return;
-camouWakeAnimation();
+
     const point = texturePoint(event);
 
     // Visuals Hebel.
@@ -3846,13 +3789,9 @@ if (event.key === "ArrowDown") {
       setZoom(currentZoom + 0.7);
     }
 
-   if (event.key === "0") {
-  setZoom(defaultZoom);
-}
-
-if (event.key.startsWith("Arrow")) {
-  camouWakeAnimation();
-}
+    if (event.key === "0") {
+      setZoom(defaultZoom);
+    }
   }
 );
 
@@ -3919,52 +3858,11 @@ function camouHorizontalDirection() {
   // einer Ueberkopf-Drehung korrigieren.
   return Math.cos(tilt) < 0 ? -1 : 1;
 }
-// CAMOU: Animation nur bei Bedarf ausführen
-let camouAnimationFrameId = null;
-let camouAnimationRunning = false;
 
-function camouWakeAnimation() {
-  if (camouAnimationRunning) return;
-
-  camouAnimationRunning = true;
-
-  camouAnimationFrameId =
-    requestAnimationFrame(animate);
-}
-
-function camouAnimationShouldContinue() {
-  const hasInertia =
-    Math.abs(velocityX) > 0.00004 ||
-    Math.abs(velocityY) > 0.00004;
-
-  const compassMoving =
-    Math.abs(
-      wrapAngle(targetNeedleAngle - needleAngle)
-    ) > 0.0005;
-
-  const videoFallback =
-    homeVideoPlaying &&
-    typeof homeVideo.requestVideoFrameCallback !==
-      "function";
-
-  const waitingForPlanetAssets =
-    camouWorldFlight?.phase === "prepare" &&
-    !camouWorldFlight.ready;
-
-  return (
-    isDragging ||
-    menuAnimating ||
-    (!!camouWorldFlight && !waitingForPlanetAssets) ||
-    hasInertia ||
-    compassMoving ||
-    videoFallback
-  );
-}
 function animate(now = 0) {
+  requestAnimationFrame(animate);
 
-  if (camouWorldFlight) {
-    camouUpdateWorldFlight(now);
-  }
+  if (camouWorldFlight) camouUpdateWorldFlight(now);
 
   /* NAVIGATION – DREI PHASEN */
 
@@ -4219,23 +4117,9 @@ camouUpdateExplorePlanetSize();
   }
 
   updateIndicator();
-
-  // Nur weiterlaufen, wenn CAMOU aktiv ist
-  if (camouAnimationShouldContinue()) {
-
-    camouAnimationFrameId =
-      requestAnimationFrame(animate);
-
-  } else {
-
-    camouAnimationFrameId = null;
-    camouAnimationRunning = false;
-
-  }
 }
 
-// Erster Renderdurchlauf
-camouWakeAnimation();
+requestAnimationFrame(animate);
 
 /* =========================================
    RESIZE
@@ -4264,7 +4148,6 @@ renderer.setPixelRatio(
 );
 
   sceneNeedsRender = true;
-   camouWakeAnimation();
 }
 
 window.addEventListener(
@@ -4931,7 +4814,6 @@ refreshIsland = function(index) {
 
   texture.needsUpdate = true;
   sceneNeedsRender = true;
-   camouWakeAnimation();
 };
 
 /* =========================================
@@ -5235,8 +5117,7 @@ function camouCreatePortal() {
 ========================================= */
 
 
-
-async function camouCreateRockyWorldTexture() {
+function camouCreateRockyWorldTexture() {
   const width = mobile ? 512 : 768;
   const height = width / 2;
 
@@ -5298,9 +5179,9 @@ async function camouCreateRockyWorldTexture() {
     return mix(layer(0), layer(1), fz);
   }
 
-  // Bild zeilenweise berechnen
+  // Echte 3D-Koordinaten verhindern
+  // sternfoermige Muster an den Polen.
   for (let y = 0; y < height; y++) {
-
     const lat =
       Math.PI * (
         0.5 - (y + 0.5) / height
@@ -5310,7 +5191,6 @@ async function camouCreateRockyWorldTexture() {
     const cr = Math.cos(lat);
 
     for (let x = 0; x < width; x++) {
-
       const lon =
         2 * Math.PI * (
           (x + 0.5) / width
@@ -5346,6 +5226,7 @@ async function camouCreateRockyWorldTexture() {
       const relief =
         (mineral - 0.5) * 75;
 
+      // Lavendelgraue, mineralische Oberflaeche.
       const light = Math.max(
         0,
         nx * -0.48 +
@@ -5382,18 +5263,13 @@ async function camouCreateRockyWorldTexture() {
 
       image.data[i + 3] = 255;
     }
-
-    // Alle 8 Zeilen kurz an den Browser abgeben
-    if ((y & 7) === 7) {
-      await new Promise(resolve =>
-        setTimeout(resolve, 0)
-      );
-    }
   }
 
   ctx.putImageData(image, 0, 0);
 
-  const texture = new THREE.CanvasTexture(canvas);
+  const texture = new THREE.CanvasTexture(
+    canvas
+  );
 
   texture.colorSpace = THREE.SRGBColorSpace;
   texture.wrapS = THREE.RepeatWrapping;
@@ -5406,6 +5282,7 @@ async function camouCreateRockyWorldTexture() {
 
   return texture;
 }
+
 
 /* =========================================
    INHALT DES ZWEITEN PROJEKTS
@@ -5506,13 +5383,10 @@ function camouEnsureSecondPlanet() {
     return camouSecondPlanetReady;
   }
 
-camouSecondPlanetReady =
-  Promise.resolve().then(async () => {
-    const group = new THREE.Group();
+  camouSecondPlanetReady =
+    Promise.resolve().then(() => {
+      const group = new THREE.Group();
 
-    // Gesteinstextur abschnittsweise erstellen.
-    const rockyTexture =
-      await camouCreateRockyWorldTexture();
 
 const sphere = new THREE.Mesh(
   new THREE.SphereGeometry(
@@ -5521,7 +5395,7 @@ const sphere = new THREE.Mesh(
     mobile ? 48 : 64
   ),
   new THREE.MeshBasicMaterial({
-    map: rockyTexture,
+    map: camouCreateRockyWorldTexture(),
 
     // Echte, undurchsichtige 3D-Oberflaeche.
     transparent: false,
@@ -5891,13 +5765,12 @@ function camouFlyToWorld(world, sectionIndex = 0) {
 
     // Auch der erste Besuch verwendet
     // dieselbe fertige Projektoberflaeche.
-camouEnsureSecondPlanet()
-  .then(() => {
-    if (camouWorldFlight === flight) {
-      flight.ready = true;
-      camouWakeAnimation();
-    }
-  })
+    camouEnsureSecondPlanet()
+      .then(() => {
+        if (camouWorldFlight === flight) {
+          flight.ready = true;
+        }
+      })
       .catch(error => {
         console.error(
           "CAMOU Projektplanet:",
@@ -5960,7 +5833,6 @@ camouSetGlobeFlightOpacity(1);
   }
 
   sceneNeedsRender = true;
-   camouWakeAnimation();
 }
 
 function camouUpdateWorldFlight(now) {
@@ -6468,3 +6340,240 @@ handleGlobeClick = function(event) {
 camouCreatePortal();
 
 /* ENDE CAMOU PROJEKTPLANET 02 */
+
+
+/* ============================================================
+   CAMOU – TRACKLIST + COUNTDOWN
+   Zusaetzliche freie Flaechen auf der oberen/unteren Kugelseite
+============================================================ */
+
+const CAMOU_TRACKS_PLACE = {
+  lon: 72,
+  lat: 48,
+  tiltR: -13 * RAD
+};
+
+const CAMOU_COUNTDOWN_PLACE = {
+  lon: 72,
+  lat: -43,
+  tiltR: 8 * RAD
+};
+
+function camouCreateOverlayCanvas(place) {
+  const canvas = document.createElement("canvas");
+  canvas.width = CAMOU_V2_W;
+  canvas.height = CAMOU_V2_H;
+
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  texture.anisotropy = Math.min(
+    renderer.capabilities.getMaxAnisotropy(),
+    4
+  );
+
+  const mesh = new THREE.Mesh(
+    camouV2Geometry(place),
+    new THREE.MeshBasicMaterial({
+      map: texture,
+      transparent: true,
+      depthTest: true,
+      depthWrite: false,
+      side: THREE.DoubleSide
+    })
+  );
+
+  mesh.renderOrder = 3;
+  globeGroup.add(mesh);
+
+  return { canvas, texture, mesh };
+}
+
+const camouTracksOverlay = camouCreateOverlayCanvas(CAMOU_TRACKS_PLACE);
+const camouCountdownOverlay = camouCreateOverlayCanvas(CAMOU_COUNTDOWN_PLACE);
+
+function camouDrawTracklist() {
+  const { canvas, texture } = camouTracksOverlay;
+  const ctx = canvas.getContext("2d");
+  const w = canvas.width;
+  const h = canvas.height;
+
+  ctx.clearRect(0, 0, w, h);
+  ctx.save();
+  ctx.translate(w / 2, h / 2);
+  ctx.textBaseline = "middle";
+
+  // Unruhiger, handgezeichneter Orbit als visuelle Klammer.
+  ctx.save();
+  ctx.strokeStyle = "rgba(224,235,220,.36)";
+  ctx.lineWidth = 1.4;
+  ctx.setLineDash([3, 10, 18, 6]);
+  ctx.beginPath();
+  ctx.ellipse(0, 0, 350, 270, -0.24, -0.12, Math.PI * 1.83);
+  ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.strokeStyle = "rgba(224,235,220,.22)";
+  ctx.beginPath();
+  ctx.ellipse(10, -2, 285, 205, 0.34, 0.25, Math.PI * 1.78);
+  ctx.stroke();
+  ctx.restore();
+
+  // Kleine Stern-/Kreuzmarken, bewusst unregelmaessig verteilt.
+  const marks = [
+    [-365, -220, 9], [330, -270, 7], [375, 115, 10],
+    [-330, 260, 7], [35, -315, 8], [180, 290, 6],
+    [-70, 285, 5]
+  ];
+  for (const [x, y, size] of marks) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(0.4);
+    ctx.strokeStyle = "rgba(230,239,226,.72)";
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(-size, 0);
+    ctx.lineTo(size, 0);
+    ctx.moveTo(0, -size);
+    ctx.lineTo(0, size);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  ctx.textAlign = "center";
+  ctx.fillStyle = "rgba(224,235,220,.68)";
+  ctx.font = "500 17px 'DM Mono', monospace";
+  ctx.save();
+  ctx.translate(-8, -18);
+  ctx.rotate(-0.08);
+  ctx.fillText("TRACKS / FRAGMENTE", 0, 0);
+  ctx.restore();
+
+  const tracks = [
+    { n: "3", title: "verstand gg. Leib", x: -205, y: -175, r: -0.10, size: 29 },
+    { n: "2", title: "mfg", x: 70, y: -255, r: 0.13, size: 35 },
+    { n: "7", title: "SCHOTTER", x: 250, y: -145, r: -0.16, size: 31 },
+    { n: "5", title: "06:00, 06:05, 06:10, 06:15…", x: 245, y: 55, r: 0.08, size: 18 },
+    { n: "8", title: "suchtbedingt (outro)", x: 105, y: 235, r: -0.11, size: 24 },
+    { n: "", title: "wie die jungs", x: -145, y: 235, r: 0.12, size: 27 },
+    { n: "1", title: "sanktgallen (intro)", x: -280, y: 35, r: -0.17, size: 23 },
+    { n: "6", title: "moerder", x: -20, y: 80, r: 0.06, size: 33 }
+  ];
+
+  for (const track of tracks) {
+    ctx.save();
+    ctx.translate(track.x, track.y);
+    ctx.rotate(track.r);
+    ctx.textAlign = "left";
+    ctx.fillStyle = "rgba(204,220,202,.72)";
+    ctx.font = "500 15px 'DM Mono', monospace";
+    if (track.n) ctx.fillText(track.n.padStart(2, "0"), -8, -21);
+
+    ctx.fillStyle = "#F2F0E8";
+    ctx.font = `500 ${track.size}px Manrope, Arial, sans-serif`;
+    ctx.shadowColor = "rgba(0,0,0,.48)";
+    ctx.shadowBlur = 9;
+    ctx.fillText(track.title, 18, 0, 430);
+    ctx.shadowBlur = 0;
+
+    ctx.strokeStyle = "rgba(219,233,216,.45)";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(18, 17);
+    ctx.lineTo(Math.min(245, 26 + track.title.length * track.size * 0.34), 17);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  // Kleine handschriftliche Akzentlinie.
+  ctx.save();
+  ctx.translate(5, 5);
+  ctx.rotate(-0.18);
+  ctx.strokeStyle = "rgba(230,239,225,.58)";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(-70, -5);
+  ctx.bezierCurveTo(-15, -24, 28, 20, 88, -8);
+  ctx.stroke();
+  ctx.restore();
+
+  ctx.restore();
+  texture.needsUpdate = true;
+  sceneNeedsRender = true;
+}
+
+const CAMOU_COUNTDOWN_TARGET = new Date(2026, 10, 27, 0, 0, 0, 0);
+
+function camouDrawCountdown() {
+  const { canvas, texture } = camouCountdownOverlay;
+  const ctx = canvas.getContext("2d");
+  const w = canvas.width;
+  const h = canvas.height;
+  const remaining = Math.max(0, CAMOU_COUNTDOWN_TARGET.getTime() - Date.now());
+
+  const totalSeconds = Math.floor(remaining / 1000);
+  const days = Math.floor(totalSeconds / 86400);
+  const hours = Math.floor((totalSeconds % 86400) / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+
+  ctx.clearRect(0, 0, w, h);
+  ctx.save();
+  ctx.translate(w / 2, h / 2);
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+
+  // Offene, technische Rahmung statt einer geschlossenen Box.
+  ctx.strokeStyle = "rgba(224,236,222,.52)";
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(-300, -150);
+  ctx.lineTo(-235, -150);
+  ctx.moveTo(235, -150);
+  ctx.lineTo(300, -150);
+  ctx.moveTo(-300, 150);
+  ctx.lineTo(-235, 150);
+  ctx.moveTo(235, 150);
+  ctx.lineTo(300, 150);
+  ctx.stroke();
+
+  ctx.fillStyle = "rgba(221,234,218,.72)";
+  ctx.font = "500 18px 'DM Mono', monospace";
+  ctx.fillText("COUNTDOWN  /  NEXT TRANSMISSION", 0, -104);
+
+  ctx.fillStyle = "#F4F1E8";
+  ctx.shadowColor = "rgba(0,0,0,.48)";
+  ctx.shadowBlur = 12;
+  ctx.font = "300 112px Manrope, Arial, sans-serif";
+  ctx.fillText(String(days).padStart(2, "0"), 0, 8);
+  ctx.shadowBlur = 0;
+
+  ctx.fillStyle = "rgba(226,237,222,.82)";
+  ctx.font = "500 20px 'DM Mono', monospace";
+  ctx.fillText("TAGE", 0, 67);
+
+  ctx.fillStyle = "#F4F1E8";
+  ctx.font = "500 30px 'DM Mono', monospace";
+  ctx.fillText(
+    `${String(hours).padStart(2, "0")} : ${String(minutes).padStart(2, "0")} : ${String(seconds).padStart(2, "0")}`,
+    0,
+    112
+  );
+
+  ctx.fillStyle = "rgba(221,234,218,.70)";
+  ctx.font = "500 17px 'DM Mono', monospace";
+  ctx.fillText("27 . 11 . 2026", 0, 174);
+
+  ctx.restore();
+  texture.needsUpdate = true;
+  sceneNeedsRender = true;
+}
+
+camouDrawTracklist();
+camouDrawCountdown();
+
+// Nur die Countdown-Flaeche wird sekundenweise neu gezeichnet.
+const camouCountdownTimer = window.setInterval(
+  camouDrawCountdown,
+  1000
+);
+
+/* ENDE CAMOU – TRACKLIST + COUNTDOWN */
