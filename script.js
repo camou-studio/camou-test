@@ -3368,11 +3368,21 @@ stage.addEventListener(
       event.target.closest(".zoom-controls")
     ) return;
 
-        if (camouWorldFlight) return;
+    if (camouWorldFlight) return;
+
+    // Browser-Zoom durch Zwei-Finger-Geste verhindern
+    if (event.ctrlKey) {
+      event.preventDefault();
+
+      setZoom(
+        currentZoom + event.deltaY * 0.008
+      );
+
+      return;
+    }
 
     setZoom(
-      currentZoom +
-      event.deltaY * 0.008
+      currentZoom + event.deltaY * 0.008
     );
   },
   { passive: false }
