@@ -5,8 +5,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#101411">
-<meta name="description" content="Impressum und Datenschutzerklärung – camou. Rechtliche Angaben gemäss Schweizer Datenschutzgesetz (DSG), Datenverarbeitung und Kontaktmöglichkeiten.">
-<title>Impressum & Datenschutz — camou</title>
+<meta name="description" content="Impressum und Datenschutzerklärung – projekt - camOu. Rechtliche Angaben gemäss Schweizer Datenschutzgesetz (DSG), Datenverarbeitung und Kontaktmöglichkeiten.">
+<title>Impressum & Datenschutz — projekt - camOu</title>
 <link rel="canonical" href="https://www.camou.ch/impressum.html">
 
 <!-- Favicons -->
@@ -52,6 +52,63 @@ body.legal-page {
   flex: 0 0 76px;
   width: 100%;
   z-index: 10;
+}
+
+/* Dieselbe CAMOU-Menueleiste wie auf der Startseite.
+   Das Script.js der 3D-Hauptseite wird hier bewusst nicht geladen. */
+.legal-page .camou-menu-shell {
+  background:
+    radial-gradient(ellipse 35% 200% at 8% -10%, rgba(255,255,255,.31) 0%, rgba(255,255,255,.08) 52%, transparent 95%),
+    radial-gradient(ellipse 37% 210% at 53% 115%, rgba(255,255,255,.25) 0%, rgba(255,255,255,.05) 52%, transparent 98%),
+    radial-gradient(ellipse 30% 185% at 97% 7%, rgba(255,255,255,.22) 0%, transparent 88%),
+    linear-gradient(110deg, #92999E 0%, #AEB3B7 28%, #969DA2 60%, #B1B7BA 84%, #92999E 100%) !important;
+}
+
+.legal-page .camou-menu-shell,
+.legal-page .camou-menu-shell a,
+.legal-page .camou-menu-shell button,
+.legal-page .camou-menu-shell span {
+  color: #FCFCFC !important;
+}
+
+.legal-page .camou-menu-shell .nav-link,
+.legal-page .camou-menu-shell .nav-link * {
+  color: #FCFCFC !important;
+  text-transform: none !important;
+  transition: color .2s ease;
+}
+
+.legal-page .camou-menu-shell .nav-link:hover,
+.legal-page .camou-menu-shell .nav-link:focus-visible {
+  color: #88C8C8 !important;
+  border-bottom-color: #88C8C8 !important;
+}
+
+.legal-page .camou-menu-shell .nav-link:hover::after,
+.legal-page .camou-menu-shell .nav-link:focus-visible::after {
+  background-color: #88C8C8 !important;
+  border-color: #88C8C8 !important;
+}
+
+/* Die Navigation sitzt wie auf camou.ch mittig im oberen Balken. */
+@media (min-width: 901px) {
+  .legal-page .camou-nav-centered {
+    position: fixed !important;
+    left: 50vw !important;
+    top: var(--camou-nav-center-y, 38px) !important;
+    transform: translate(-50%, -50%) !important;
+    width: max-content !important;
+    max-width: calc(100vw - 230px);
+    margin: 0 !important;
+    z-index: 50 !important;
+    white-space: nowrap !important;
+  }
+}
+
+.legal-page .logo:focus-visible,
+.legal-page .nav-link:focus-visible {
+  outline: 2px solid #88C8C8;
+  outline-offset: 4px;
 }
 
 .legal-main {
@@ -164,60 +221,197 @@ body.legal-page {
     font-size: 13px;
   }
 }
+
+
+/* =========================================================
+   CAMOU-LEISTEN: IDENTISCHER SILBERGRAUER LOOK WIE AUF DER
+   CAMOU-HAUPTSEITE. Diese Regeln stehen bewusst am Ende und
+   haben hohe Spezifitaet, damit style.css sie nicht verdraengt.
+========================================================= */
+body.legal-page > header.topbar.camou-menu-shell,
+body.legal-page > footer.footer.camou-menu-shell {
+  background:
+    radial-gradient(ellipse 35% 200% at 8% -10%, rgba(255,255,255,.31) 0%, rgba(255,255,255,.08) 52%, transparent 95%),
+    radial-gradient(ellipse 37% 210% at 53% 115%, rgba(255,255,255,.25) 0%, rgba(255,255,255,.05) 52%, transparent 98%),
+    radial-gradient(ellipse 30% 185% at 97% 7%, rgba(255,255,255,.22) 0%, transparent 88%),
+    linear-gradient(110deg, #92999E 0%, #AEB3B7 28%, #969DA2 60%, #B1B7BA 84%, #92999E 100%) !important;
+  background-color: #A6ADB1 !important;
+  color: #FCFCFC !important;
+  box-sizing: border-box;
+}
+
+body.legal-page > header.topbar.camou-menu-shell {
+  position: relative !important;
+  display: flex !important;
+  flex: 0 0 104px !important;
+  height: 104px !important;
+  min-height: 104px !important;
+  width: 100% !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  padding: 0 4.85vw !important;
+  border-bottom: 1px solid rgba(255,255,255,.24) !important;
+  z-index: 20 !important;
+}
+
+body.legal-page > header.topbar.camou-menu-shell .logo {
+  position: relative !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  color: #FCFCFC !important;
+  font-family: Manrope, Arial, sans-serif !important;
+  font-size: 23px !important;
+  font-weight: 800 !important;
+  letter-spacing: -1.5px !important;
+  line-height: 1 !important;
+  text-decoration: none !important;
+  white-space: nowrap !important;
+  z-index: 2 !important;
+}
+
+body.legal-page > header.topbar.camou-menu-shell .navigation {
+  position: absolute !important;
+  left: 50% !important;
+  top: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: clamp(22px, 2.6vw, 46px) !important;
+  width: max-content !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  white-space: nowrap !important;
+}
+
+body.legal-page > header.topbar.camou-menu-shell .navigation .nav-link {
+  display: inline-block !important;
+  padding: 8px 0 !important;
+  border: 0 !important;
+  border-bottom: 1px solid transparent !important;
+  background: transparent !important;
+  color: #FCFCFC !important;
+  font-family: Manrope, Arial, sans-serif !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  letter-spacing: 1.35px !important;
+  line-height: 1.2 !important;
+  text-decoration: none !important;
+  text-transform: none !important;
+  transition: color .2s ease, border-color .2s ease !important;
+}
+
+body.legal-page > header.topbar.camou-menu-shell .navigation .nav-link:hover,
+body.legal-page > header.topbar.camou-menu-shell .navigation .nav-link:focus-visible {
+  color: #88C8C8 !important;
+  border-bottom-color: #88C8C8 !important;
+  outline: none;
+}
+
+body.legal-page > footer.footer.camou-menu-shell {
+  position: relative !important;
+  display: flex !important;
+  flex: 0 0 84px !important;
+  height: 84px !important;
+  min-height: 84px !important;
+  width: 100% !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 20px !important;
+  padding: 0 4.85vw !important;
+  border-top: 1px solid rgba(255,255,255,.24) !important;
+  z-index: 20 !important;
+}
+
+body.legal-page > footer.footer.camou-menu-shell a,
+body.legal-page > footer.footer.camou-menu-shell a:visited {
+  color: #FCFCFC !important;
+  font-family: "DM Mono", monospace !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  letter-spacing: 1.1px !important;
+  line-height: 1.4 !important;
+  text-decoration: none !important;
+  text-transform: none !important;
+}
+
+body.legal-page > footer.footer.camou-menu-shell a:hover,
+body.legal-page > footer.footer.camou-menu-shell a:focus-visible {
+  color: #88C8C8 !important;
+}
+
+body.legal-page > footer.footer.camou-menu-shell .footer-impressum {
+  letter-spacing: 1.1px !important;
+}
+
+@media (max-width: 700px) {
+  body.legal-page > header.topbar.camou-menu-shell {
+    flex-basis: 78px !important;
+    height: 78px !important;
+    min-height: 78px !important;
+    padding: 0 20px !important;
+  }
+
+  body.legal-page > header.topbar.camou-menu-shell .logo {
+    font-size: 21px !important;
+  }
+
+  body.legal-page > header.topbar.camou-menu-shell .navigation {
+    position: static !important;
+    transform: none !important;
+    display: flex !important;
+    gap: 12px !important;
+    max-width: 76vw !important;
+    overflow-x: auto !important;
+    margin-left: auto !important;
+    padding-left: 12px !important;
+    scrollbar-width: none;
+  }
+
+  body.legal-page > header.topbar.camou-menu-shell .navigation::-webkit-scrollbar {
+    display: none;
+  }
+
+  body.legal-page > header.topbar.camou-menu-shell .navigation .nav-link {
+    font-size: 10px !important;
+    letter-spacing: .6px !important;
+  }
+
+  body.legal-page > footer.footer.camou-menu-shell {
+    flex-basis: 64px !important;
+    height: 64px !important;
+    min-height: 64px !important;
+    padding: 0 20px !important;
+  }
+
+  body.legal-page > footer.footer.camou-menu-shell a {
+    font-size: 10px !important;
+    letter-spacing: .65px !important;
+  }
+}
+
 </style>
 </head>
 
 <body class="legal-page">
 
-<!-- HEADER: identisch zur Hauptseite -->
-<header class="topbar">
+<!-- HEADER: gleiche Leiste wie auf der camOu-Hauptseite -->
+<header class="topbar camou-menu-shell">
+  <a class="logo" href="index.html" id="logo" aria-label="camOu Startseite">camOu</a>
 
-  <a
-    class="logo"
-    href="index.html"
-    id="logo"
-  >
-    camOu<span>.</span>
-  </a>
-
-  <!-- NAVIGATION -->
-  <nav
-    class="navigation"
-    aria-label="Hauptnavigation"
-  >
-
-    <a class="nav-link" href="index.html">
-      Home
-    </a>
-
-    <a class="nav-link" href="index.html#music">
-      Music
-    </a>
-
-    <a class="nav-link" href="index.html#visuals">
-      Visuals
-    </a>
-
-    <a class="nav-link" href="index.html#echoes">
-      Echoes
-    </a>
-
-    <a class="nav-link" href="index.html#contact">
-      Contact
-    </a>
-
+  <nav class="navigation" aria-label="Hauptnavigation">
+    <a class="nav-link" href="index.html">zuhause</a>
+    <a class="nav-link" href="index.html#music">musik</a>
+    <a class="nav-link" href="index.html#visuals">??</a>
+    <a class="nav-link" href="index.html#echoes">echo</a>
+    <a class="nav-link" href="index.html#contact">kontakt</a>
   </nav>
-
-  <div class="top-note">
-    INDEPENDENT ARTIST
-  </div>
-
 </header>
 
 <main class="legal-main">
 
   <div class="legal-kicker">
-    CAMOU / RECHTLICHES
+    camOu / RECHTLICHES
   </div>
 
   <h1>Impressum &amp;<br>Datenschutz</h1>
@@ -238,8 +432,8 @@ body.legal-page {
     <p>
       <strong>Kontakt:</strong><br>
       E-Mail:
-      <a href="mailto:kontakt@camou.ch">
-        kontakt@camou.ch
+      <a href="mailto:kontakt@b3nn3t.ch">
+        kontakt@b3nn3t.ch
       </a>
     </p>
   </section>
@@ -269,8 +463,8 @@ body.legal-page {
     <p>
       <strong>Bennet Kohnke</strong><br>
       Kontakt:
-      <a href="mailto:kontakt@camou.ch">
-        kontakt@camou.ch
+      <a href="mailto:kontakt@b3nn3t.ch">
+        kontakt@b3nn3t.ch
       </a>
     </p>
 
@@ -314,8 +508,8 @@ body.legal-page {
     <p>
       Die Formular-Daten werden über Google Apps Script
       verarbeitet und per E-Mail an
-      <a href="mailto:kontakt@camou.ch">
-        kontakt@camou.ch
+      <a href="mailto:kontakt@b3nn3t.ch">
+        kontakt@b3nn3t.ch
       </a>
       weitergeleitet. Bei der Nutzung des Kontaktformulars
       wird die Einwilligung zur Datenbearbeitung über
@@ -425,7 +619,7 @@ body.legal-page {
       Ich behalte mir vor, diese Datenschutzerklärung
       gelegentlich anzupassen.
       Diese Erklärung wurde im November 2026
-      für camou angepasst.
+      für das projekt - camOu angepasst.
     </p>
   </section>
 
@@ -452,19 +646,33 @@ body.legal-page {
 
 </main>
 
-<footer class="footer">
-  <span>
-    b3nn3t — independent artist / Switzerland
-  </span>
-
-  <div class="footer-links">
-    <a href="index.html">Home</a>
-    <a href="mailto:kontakt@camou.ch">Contact ↗</a>
-    <a href="impressum.html" aria-current="page">
-      Impressum
-    </a>
-  </div>
+<footer class="footer camou-menu-shell">
+  <a class="footer-impressum" href="impressum.html" aria-current="page">Impressum</a>
+  <a class="footer-signature" href="https://www.b3nn3t.com" target="_blank" rel="noopener noreferrer">b3nn3t</a>
 </footer>
+
+
+<script>
+/* CAMOU-Navigation auf der Rechtsseite optisch wie auf der Hauptseite ausrichten. */
+(function () {
+  const header = document.querySelector(".legal-page .topbar");
+  const nav = document.querySelector(".legal-page .camou-nav-centered");
+  if (!header || !nav) return;
+
+  function centerCamouNavigation() {
+    const rect = header.getBoundingClientRect();
+    const centerY = rect.top + rect.height / 2;
+    document.documentElement.style.setProperty(
+      "--camou-nav-center-y",
+      `${centerY}px`
+    );
+  }
+
+  centerCamouNavigation();
+  window.addEventListener("resize", centerCamouNavigation, { passive: true });
+  window.addEventListener("scroll", centerCamouNavigation, { passive: true });
+})();
+</script>
 
 </body>
 </html>
