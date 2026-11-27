@@ -7094,8 +7094,8 @@ function camouDrawYouTubeWindow(image = null) {
   // Position und Grösse des Fensters
   const x = 55;
   const y = 105;
-  const width = 850;
-  const height = 550;
+  const width = 526;
+  const height = 448;
 
   ctx.save();
 
@@ -7193,11 +7193,11 @@ function camouDrawYouTubeWindow(image = null) {
   // VIDEOFLÄCHE
   // ----------------------------------------------------------
 
-  const videoX = x + 23;
-  const videoY = y + 62;
+  const videoX = x + 14;
+  const videoY = y + 55;
 
-  const videoW = width - 46;
-  const videoH = 455;
+  const videoW = width - 28;
+  const videoH = 105;
 
   // Schwarzer Videorahmen
   ctx.fillStyle = "#101314";
