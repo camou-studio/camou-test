@@ -7040,3 +7040,496 @@ const camouCountdownTimer = window.setInterval(
 );
 
 /* ENDE CAMOU – TRACKLIST + COUNTDOWN */
+// ============================================================
+// CAMOU / YOUTUBE FENSTER AUF DER GROSSEN 3D-KUGEL
+// ============================================================
+
+const CAMOU_YOUTUBE_ID = "X-5j2UTqLy0";
+
+// ------------------------------------------------------------
+// 1. FREIE POSITION AUF DER GROSSEN KUGEL
+// ------------------------------------------------------------
+
+// Eigener Ort auf der Hauptkugel.
+// Bewusst getrennt vom kleinen Planeten und
+// den bereits vorhandenen Inhaltsbereichen.
+
+const CAMOU_YOUTUBE_PLACE = {
+  lon: 175,
+  lat: -45,
+  tiltR: -6 * RAD
+};
+
+
+// ------------------------------------------------------------
+// 2. GEKRÜMMTE VIDEO-FENSTER-FLÄCHE ERZEUGEN
+// ------------------------------------------------------------
+
+const camouYouTubeOverlay =
+  camouCreateOverlayCanvas(CAMOU_YOUTUBE_PLACE);
+
+// Eigene Kennung für die Klickerkennung.
+camouYouTubeOverlay.mesh.userData.sectionIndex = 6;
+
+// In die vorhandene 3D-Klickerkennung aufnehmen.
+CAMOU_V2_MESHES[6] = camouYouTubeOverlay.mesh;
+
+
+// ------------------------------------------------------------
+// 3. VIDEO-FENSTER ZEICHNEN
+// ------------------------------------------------------------
+
+function camouDrawYouTubeWindow(image = null) {
+
+  const canvas = camouYouTubeOverlay.canvas;
+  const texture = camouYouTubeOverlay.texture;
+
+  const ctx = canvas.getContext("2d");
+
+  const w = canvas.width;
+  const h = canvas.height;
+
+  ctx.clearRect(0, 0, w, h);
+
+  // Position und Grösse des Fensters
+  const x = 55;
+  const y = 105;
+  const width = 850;
+  const height = 550;
+
+  ctx.save();
+
+  // Äusserer Schatten
+  ctx.shadowColor = "rgba(0,0,0,.30)";
+  ctx.shadowBlur = 28;
+  ctx.shadowOffsetY = 15;
+
+  // Silberner Fensterrahmen
+  const frame = ctx.createLinearGradient(
+    x, y, x, y + height
+  );
+
+  frame.addColorStop(0, "#F5F7FA");
+  frame.addColorStop(.35, "#DCE2E8");
+  frame.addColorStop(.75, "#C5CDD5");
+  frame.addColorStop(1, "#ADB7C0");
+
+  ctx.fillStyle = frame;
+
+  ctx.beginPath();
+  ctx.roundRect(x, y, width, height, 12);
+  ctx.fill();
+
+  ctx.restore();
+
+  ctx.save();
+
+  // Rahmenlinie
+  ctx.strokeStyle = "rgba(255,255,255,.90)";
+  ctx.lineWidth = 2;
+
+  ctx.beginPath();
+  ctx.roundRect(x, y, width, height, 12);
+  ctx.stroke();
+
+  // ----------------------------------------------------------
+  // TITELLEISTE
+  // ----------------------------------------------------------
+
+  const titleHeight = 43;
+
+  const titleGradient = ctx.createLinearGradient(
+    x, y, x, y + titleHeight
+  );
+
+  titleGradient.addColorStop(0, "#F8FAFC");
+  titleGradient.addColorStop(1, "#D5DDE5");
+
+  ctx.fillStyle = titleGradient;
+
+  ctx.beginPath();
+  ctx.roundRect(
+    x + 1,
+    y + 1,
+    width - 2,
+    titleHeight,
+    10
+  );
+  ctx.fill();
+
+  ctx.fillStyle = "#56606B";
+  ctx.font = "600 13px Manrope, Arial";
+  ctx.textAlign = "left";
+  ctx.textBaseline = "middle";
+
+  ctx.fillText(
+    "camOu / YouTube",
+    x + 20,
+    y + titleHeight / 2
+  );
+
+  // Fensterpunkte
+  const dots = ["#8BC67C", "#E1C565", "#D98A8E"];
+
+  dots.forEach((color, i) => {
+
+    ctx.fillStyle = color;
+
+    ctx.beginPath();
+
+    ctx.arc(
+      x + width - 22 - i * 15,
+      y + titleHeight / 2,
+      4,
+      0,
+      Math.PI * 2
+    );
+
+    ctx.fill();
+
+  });
+
+  // ----------------------------------------------------------
+  // VIDEOFLÄCHE
+  // ----------------------------------------------------------
+
+  const videoX = x + 23;
+  const videoY = y + 62;
+
+  const videoW = width - 46;
+  const videoH = 455;
+
+  // Schwarzer Videorahmen
+  ctx.fillStyle = "#101314";
+
+  ctx.fillRect(
+    videoX - 3,
+    videoY - 3,
+    videoW + 6,
+    videoH + 6
+  );
+
+  // Bild beschneiden
+  ctx.save();
+
+  ctx.beginPath();
+
+  ctx.rect(
+    videoX,
+    videoY,
+    videoW,
+    videoH
+  );
+
+  ctx.clip();
+
+  if (image && image.complete && image.naturalWidth > 0) {
+
+    // Echtes YouTube-Vorschaubild
+    cover(
+      ctx,
+      image,
+      videoX,
+      videoY,
+      videoW,
+      videoH
+    );
+
+  } else {
+
+    // Ersatzdarstellung, falls YouTube
+    // das Vorschaubild nicht bereitstellt.
+
+    const fallback = ctx.createLinearGradient(
+      videoX,
+      videoY,
+      videoX + videoW,
+      videoY + videoH
+    );
+
+    fallback.addColorStop(0, "#183B42");
+    fallback.addColorStop(.5, "#27565F");
+    fallback.addColorStop(1, "#101C22");
+
+    ctx.fillStyle = fallback;
+
+    ctx.fillRect(
+      videoX,
+      videoY,
+      videoW,
+      videoH
+    );
+
+    ctx.fillStyle = "rgba(255,255,255,.78)";
+    ctx.font = "500 23px Manrope, Arial";
+    ctx.textAlign = "center";
+
+    ctx.fillText(
+      "YOUTUBE VIDEO",
+      videoX + videoW / 2,
+      videoY + videoH / 2 - 55
+    );
+
+  }
+
+  // Dezente Abdunklung
+  const shade = ctx.createLinearGradient(
+    videoX,
+    videoY,
+    videoX,
+    videoY + videoH
+  );
+
+  shade.addColorStop(0, "rgba(0,0,0,.08)");
+  shade.addColorStop(.65, "rgba(0,0,0,0)");
+  shade.addColorStop(1, "rgba(0,0,0,.30)");
+
+  ctx.fillStyle = shade;
+
+  ctx.fillRect(
+    videoX,
+    videoY,
+    videoW,
+    videoH
+  );
+
+  ctx.restore();
+
+  // Play-Symbol
+  playButton(
+    ctx,
+    videoX + videoW / 2,
+    videoY + videoH / 2
+  );
+
+  // Untere Statusleiste
+  ctx.fillStyle = "#E8EDF2";
+
+  ctx.fillRect(
+    x + 1,
+    y + height - 34,
+    width - 2,
+    32
+  );
+
+  ctx.fillStyle = "#56606B";
+  ctx.font = "500 11px Manrope, Arial";
+  ctx.textAlign = "left";
+
+  ctx.fillText(
+    "Video abspielen ↗",
+    x + 22,
+    y + height - 17
+  );
+
+  ctx.textAlign = "right";
+
+  ctx.fillText(
+    "YOUTUBE",
+    x + width - 20,
+    y + height - 17
+  );
+
+  ctx.restore();
+
+  // Textur aktualisieren
+  texture.needsUpdate = true;
+  sceneNeedsRender = true;
+
+}
+
+
+// ------------------------------------------------------------
+// 4. YOUTUBE-VORSCHAUBILD LADEN
+// ------------------------------------------------------------
+
+const camouYouTubeThumbnail = new Image();
+
+camouYouTubeThumbnail.crossOrigin = "anonymous";
+
+camouYouTubeThumbnail.onload = () => {
+  camouDrawYouTubeWindow(camouYouTubeThumbnail);
+};
+
+camouYouTubeThumbnail.onerror = () => {
+  camouDrawYouTubeWindow(null);
+};
+
+// Zuerst Ersatzdarstellung aufbauen.
+camouDrawYouTubeWindow(null);
+
+// Danach das echte Vorschaubild laden.
+camouYouTubeThumbnail.src =
+  `https://img.youtube.com/vi/${CAMOU_YOUTUBE_ID}/hqdefault.jpg`;
+
+
+// ------------------------------------------------------------
+// 5. YOUTUBE PLAYER MODAL
+// ------------------------------------------------------------
+
+const youtubeModal = $("youtube-modal");
+
+const youtubePlayer = $("youtube-modal-player");
+
+const youtubeClose = $("youtube-modal-close");
+
+let youtubeOpen = false;
+
+// Modal direkt an den Body hängen.
+if (youtubeModal) {
+  document.body.appendChild(youtubeModal);
+}
+
+
+// ------------------------------------------------------------
+// 6. PLAYER ÖFFNEN
+// ------------------------------------------------------------
+
+function openYouTubeModal() {
+
+  if (!youtubeModal || youtubeOpen) return;
+
+  youtubeOpen = true;
+
+  // Kugelbewegung stoppen.
+  velocityX = 0;
+  velocityY = 0;
+
+  isDragging = false;
+  menuAnimating = false;
+
+  pointers.clear();
+  pointerStart = null;
+
+  stage.classList.remove("dragging");
+
+  // Fenster sichtbar machen.
+  youtubeModal.hidden = false;
+  youtubeModal.style.display = "flex";
+
+  // Player erst jetzt laden und starten.
+  if (youtubePlayer) {
+
+    youtubePlayer.src =
+      youtubePlayer.dataset.src;
+
+  }
+
+  youtubeClose?.focus({
+    preventScroll: true
+  });
+
+}
+
+
+// ------------------------------------------------------------
+// 7. PLAYER SCHLIESSEN
+// ------------------------------------------------------------
+
+function closeYouTubeModal() {
+
+  if (!youtubeModal) return;
+
+  youtubeOpen = false;
+
+  youtubeModal.hidden = true;
+  youtubeModal.style.display = "none";
+
+  // Video wirklich stoppen.
+  youtubePlayer?.removeAttribute("src");
+
+}
+
+
+// Schliessen über X
+youtubeClose?.addEventListener(
+  "click",
+  event => {
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    closeYouTubeModal();
+
+  }
+);
+
+
+// Schliessen über Hintergrund
+youtubeModal?.addEventListener(
+  "click",
+  event => {
+
+    if (
+      event.target === youtubeModal ||
+      event.target.closest?.("[data-close-youtube]")
+    ) {
+
+      closeYouTubeModal();
+
+    }
+
+  }
+);
+
+
+// Escape-Taste
+window.addEventListener(
+  "keydown",
+  event => {
+
+    if (
+      event.key === "Escape" &&
+      youtubeOpen
+    ) {
+
+      closeYouTubeModal();
+
+    }
+
+  }
+);
+
+
+// ------------------------------------------------------------
+// 8. KLICKERKENNUNG AUF DER GROSSEN KUGEL
+// ------------------------------------------------------------
+
+// Die bestehende Klickfunktion bleibt erhalten.
+// Das neue Fenster bekommt nur eine zusätzliche Prüfung.
+
+const camouPreviousGlobeClick = handleGlobeClick;
+
+handleGlobeClick = function(event) {
+
+  if (
+    camouWorldMode === "camou" &&
+    !camouWorldFlight
+  ) {
+
+    const point = texturePoint(event);
+
+    // Nur die sichtbare Videofensterfläche ist klickbar.
+    if (
+      point?.index === 6 &&
+      Math.abs(point.x) <= 430 &&
+      Math.abs(point.y) <= 280
+    ) {
+
+      openYouTubeModal();
+
+      return;
+
+    }
+
+  }
+
+  // Alle bisherigen Klickfunktionen unverändert weiterführen.
+  camouPreviousGlobeClick(event);
+
+};
+
+
+// ============================================================
+// ENDE CAMOU / YOUTUBE VIDEO-FENSTER
+// ============================================================
