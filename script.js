@@ -7091,11 +7091,11 @@ function camouDrawYouTubeWindow(image = null) {
 
   ctx.clearRect(0, 0, w, h);
 
-  // Position und Grösse des Fensters
-  const x = 55;
-  const y = 105;
-  const width = 526;
-  const height = 448;
+// Position und Grösse des Fensters
+const x = 55;
+const y = 105;
+const width = 526;
+const height = 390;
 
   ctx.save();
 
@@ -7193,11 +7193,12 @@ function camouDrawYouTubeWindow(image = null) {
   // VIDEOFLÄCHE
   // ----------------------------------------------------------
 
-  const videoX = x + 14;
-  const videoY = y + 55;
+// Videofläche im klassischen 16:9-Format
+const videoX = x + 14;
+const videoY = y + 55;
 
-  const videoW = width - 28;
-  const videoH = 105;
+const videoW = width - 28;
+const videoH = Math.round(videoW * 9 / 16);
 
   // Schwarzer Videorahmen
   ctx.fillStyle = "#101314";
@@ -7264,11 +7265,11 @@ function camouDrawYouTubeWindow(image = null) {
     ctx.font = "500 23px Manrope, Arial";
     ctx.textAlign = "center";
 
-    ctx.fillText(
-      "YOUTUBE VIDEO",
-      videoX + videoW / 2,
-      videoY + videoH / 2 - 55
-    );
+ctx.fillText(
+  "YOUTUBE VIDEO",
+  videoX + videoW / 2,
+  videoY + 35
+);
 
   }
 
