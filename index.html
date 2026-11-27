@@ -497,7 +497,62 @@
         </div>
 
       </div>
+<!-- =========================================
+     CAMOU / YOUTUBE VIDEO MODAL
+========================================= -->
 
+<div
+  class="youtube-modal"
+  id="youtube-modal"
+  hidden
+  role="dialog"
+  aria-modal="true"
+  aria-label="YouTube Videoplayer"
+>
+
+  <!-- Hintergrund zum Schliessen -->
+  <div
+    class="youtube-modal-backdrop"
+    data-close-youtube
+  ></div>
+
+  <div class="youtube-modal-panel">
+
+    <!-- Fenster-Kopfzeile -->
+    <div class="youtube-modal-header">
+
+      <span>camOu / VIDEO</span>
+
+      <button
+        type="button"
+        id="youtube-modal-close"
+        aria-label="YouTube-Fenster schliessen"
+      >
+        &times;
+      </button>
+
+    </div>
+
+    <!-- YouTube Player -->
+    <div class="youtube-modal-video-wrap">
+
+      <iframe
+        id="youtube-modal-player"
+        title="CAMOU YouTube Video"
+        data-src="https://www.youtube-nocookie.com/embed/X-5j2UTqLy0?autoplay=1&rel=0"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen"
+        referrerpolicy="strict-origin-when-cross-origin"
+        allowfullscreen
+        loading="lazy"
+      ></iframe>
+
+    </div>
+
+  </div>
+
+</div>
+
+<!-- ENDE YOUTUBE VIDEO MODAL -->
       <!-- ZOOM CONTROLS -->
       <div
         class="zoom-controls"
