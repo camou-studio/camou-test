@@ -8,11 +8,11 @@
   <!-- CAMOU / BASIS -->
   <meta name="theme-color" content="#101411">
 
-  <title>camou — Independent Artist | Musik, Visuals & Kontakt</title>
+  <title>b3nn3t - projekt camOu — Independent Artist | Musik, Visuals & Kontakt</title>
 
   <meta
     name="description"
-    content="camou — Independent Artist. Gleiche Fragen. Neue Perspektiven. Entdecke Musik, Visuals und Echoes oder nimm Kontakt auf."
+    content="b3nn3t - projekt camOu — Independent Artist. Gleiche Fragen. Neuer Cosmos. Entdecke Musik, Visuals und Echoes oder nimm Kontakt auf."
   >
 
   <meta
@@ -80,16 +80,16 @@
 
   <!-- OPEN GRAPH / SOCIAL MEDIA -->
   <meta property="og:type" content="website">
-  <meta property="og:site_name" content="camou">
+  <meta property="og:site_name" content="camOu">
 
   <meta
     property="og:title"
-    content="camou — Independent Artist"
+    content="b3nn3t - projekt camOu — Independent Artist"
   >
 
   <meta
     property="og:description"
-    content="Gleiche Fragen. Neue Perspektiven. Musik, Visuals und mehr von camou."
+    content="Gleiche Fragen. Neuer Cosmos. Musik, Visuals und mehr von camOu."
   >
 
   <meta
@@ -115,12 +115,12 @@
 
   <meta
     name="twitter:title"
-    content="camou — Independent Artist"
+    content="b3nn3t - projekt camOu — Independent Artist"
   >
 
   <meta
     name="twitter:description"
-    content="Gleiche Fragen. Neue Perspektiven. Musik, Visuals und mehr von camou."
+    content="Gleiche Fragen. Neuer Cosmos. Musik, Visuals und mehr von camOu."
   >
 
   <!-- SCHEMA.ORG / STRUKTURIERTE DATEN -->
@@ -132,16 +132,16 @@
         "@type": "WebSite",
         "@id": "https://camou.ch/#website",
         "url": "https://camou.ch/",
-        "name": "camou",
-        "description": "camou — Gleiche Fragen. Neue Perspektiven.",
+        "name": "camOu",
+        "description": "camOu — Gleiche Fragen. Neuer Cosmos.",
         "inLanguage": "de-CH"
       },
       {
         "@type": "WebPage",
         "@id": "https://camou.ch/#webpage",
         "url": "https://camou.ch/",
-        "name": "camou — Independent Artist",
-        "description": "Musik, Visuals, Echoes und Kontakt von camou.",
+        "name": "b3nn3t - projekt camOu — Independent Artist",
+        "description": "Musik, Visuals, Echoes und Kontakt von camOu.",
         "inLanguage": "de-CH",
         "isPartOf": {
           "@id": "https://camou.ch/#website"
@@ -153,9 +153,9 @@
 
   <!-- THREE.JS CDN: Verbindung frueh aufbauen, ohne Funktionen zu laden. -->
   <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<!-- CAMOU: LOKALE SCHRIFTEN -->
 
-  
-<!-- CAMOU: lokale Hauptschrift frueh laden -->
+<!-- Manrope frueh laden -->
 <link
   rel="preload"
   href="./fonts/manrope_5.3.0_latin-wght-normal.woff2"
@@ -164,7 +164,7 @@
   crossorigin
 >
 
-<!-- CAMOU: DM Mono Medium fuer die Kugel frueh laden -->
+<!-- DM Mono Medium frueh laden -->
 <link
   rel="preload"
   href="./fonts/dm-mono-v16-latin-500.woff2"
@@ -202,7 +202,7 @@
         href="#"
         id="logo"
       >
-        camou<span>.</span>
+        camOu<span>.</span>
       </a>
 
       <!-- NAVIGATION -->
@@ -249,7 +249,7 @@
       </nav>
 
       <div class="top-note">
-        INDEPENDENT ARTIST
+         PROJECT
       </div>
 
     </header>
@@ -261,7 +261,40 @@
     >
 
       <div id="globe"></div>
+<!-- =========================================
+     YOUTUBE VIDEO-FENSTER AUF DER GROSSEN KUGEL
+========================================= -->
 
+<a
+  class="youtube-feature-card"
+  href="https://youtu.be/X-5j2UTqLy0?si=yZUtGGsgbMR46O8X"
+  target="_blank"
+  rel="noopener noreferrer"
+  aria-label="YouTube Video öffnen"
+>
+
+  <!-- YouTube Vorschaubild -->
+  <img
+    class="youtube-feature-thumb"
+    src="https://img.youtube.com/vi/X-5j2UTqLy0/hqdefault.jpg"
+    alt="YouTube Video"
+    loading="lazy"
+    decoding="async"
+  >
+
+  <!-- Beschriftung -->
+  <span class="youtube-feature-label">
+    YOUTUBE / VIDEO
+  </span>
+
+  <!-- Play-Symbol -->
+  <span class="youtube-feature-play" aria-hidden="true">
+    ▶
+  </span>
+
+</a>
+
+<!-- ENDE YOUTUBE VIDEO-FENSTER -->
       <!-- CONTACT MODAL -->
       <div
         class="contact-modal"
@@ -282,7 +315,7 @@
           <div class="contact-modal-header">
 
             <span id="contact-modal-title">
-              CAMOU / CONTACT
+              camOu / CONTACT
             </span>
 
             <button
@@ -346,7 +379,22 @@
                 maxlength="1200"
                 required
               ></textarea>
-            </label>
+                        </label>
+
+            <!-- HONEYPOT / SPAM-SCHUTZ -->
+            <div
+              style="position:absolute; left:-9999px; height:0; overflow:hidden;"
+              aria-hidden="true"
+            >
+              <label for="contact-website">Website</label>
+              <input
+                id="contact-website"
+                name="website"
+                type="text"
+                tabindex="-1"
+                autocomplete="off"
+              >
+            </div>
 
             <!-- DATENSCHUTZ -->
             <label class="contact-privacy">
@@ -425,7 +473,7 @@
           <div class="spotify-modal-header">
 
             <span>
-              CAMOU / MUSIK
+              camOu / MUSIK
             </span>
 
             <button
@@ -519,7 +567,7 @@
       </a>
 
       <span class="footer-signature">
-        b3nn3t — independent artist
+        <a href="https://www.b3nn3t.com" target="_blank" rel="noopener noreferrer">b3nn3t</a> — independent artist   
       </span>
 
     </footer>
